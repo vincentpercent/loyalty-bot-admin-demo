@@ -1,0 +1,573 @@
+{% extends "base.html" %}
+
+{% block title %}User #{{ user.id }} · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Заголовок -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+        
+        <div class="relative flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-indigo-400">
+                        Профиль клиента · ID {{ user.id }}
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+                    {{ user.full_name or user.username or ("TG:" ~ user.telegram_id) }}
+                </h1>
+                <p class="text-sm text-royal-muted mt-2 max-w-xl">
+                    Детальная информация о клиенте, бонусный баланс и история операций
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ url_for('user_bonus_history', user_id=user.id) }}"
+                   class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/30 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    История бонусов
+                </a>
+                <a href="{{ url_for('users_list') }}"
+                   class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/50 hover:bg-royal-gold/20 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    К списку
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контейнер для контента с overlay синхронизации -->
+    <div class="relative" id="user-detail-content-container">
+        <!-- Overlay для синхронизации -->
+        <div id="sync-overlay" class="hidden absolute inset-0 bg-royal-black/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-2xl">
+            <div class="text-center w-full max-w-md px-6">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-royal-gold border-t-transparent mb-4"></div>
+                <p class="text-sm text-royal-gold font-medium mb-4">Синхронизация баланса...</p>
+                
+                <!-- Прогресс-бар -->
+                <div class="relative w-full h-3 bg-royal-border/30 rounded-full overflow-hidden mb-2">
+                    <div id="progress-bar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-royal-gold via-amber-500 to-royal-gold rounded-full transition-all duration-300 ease-out" style="width: 0%">
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                    </div>
+                </div>
+                
+                <!-- Текст прогресса -->
+                <p class="text-xs text-royal-muted" id="sync-progress">Подключение к YClients</p>
+                <p class="text-xs text-royal-gold/70 mt-1" id="sync-stats">0 / 0</p>
+            </div>
+        </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="user-detail-content">
+
+        <!-- Основная информация -->
+        <section class="lg:col-span-2 bg-royal-surface rounded-2xl border border-royal-border px-6 py-5 space-y-4">
+            <h3 class="text-sm uppercase tracking-[0.18em] text-royal-muted mb-2">
+                Профиль
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-10 text-sm">
+                <div>
+                    <div class="text-xs text-royal-muted mb-0.5">Telegram</div>
+                    <div>
+                        {% if user.username %}
+                            <a href="https://t.me/{{ user.username }}"
+                               class="underline decoration-dotted underline-offset-4">
+                                @{{ user.username }}
+                            </a>
+                        {% else %}
+                            <span>{{ user.telegram_id }}</span>
+                        {% endif %}
+                        ·
+                        <a href="tg://user?id={{ user.telegram_id }}"
+                           class="underline decoration-dotted underline-offset-4">
+                            открыть в Telegram
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-royal-muted mb-0.5">Телефон</div>
+                    <div>{{ user.phone or '—' }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-royal-muted mb-0.5">YCLIENTS клиент</div>
+                    <div>
+                        {% if user.yclients_client_id %}
+                            <span class="px-2 py-0.5 rounded-full border border-royal-gold text-royal-gold text-xs">
+                                ID {{ user.yclients_client_id }}
+                            </span>
+                        {% else %}
+                            <span class="text-royal-muted">не привязан</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-royal-muted mb-0.5">Записей через бота</div>
+                    <div class="text-royal-gold font-medium">{{ bookings_count }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-royal-muted mb-0.5">Создан</div>
+                    <div>
+                        {{ user.created_at.strftime('%d.%m.%Y · %H:%M') if user.created_at else '—' }}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-royal-muted mb-0.5">Статус клиента</div>
+                    <div>
+                        {% if user.is_new_client is none %}
+                            <span class="text-royal-muted">не вычислено</span>
+                        {% elif user.is_new_client %}
+                            <span class="text-royal-gold">новый клиент</span>
+                        {% else %}
+                            <span>существующий клиент</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Бонусы -->
+        <section class="bg-royal-surface rounded-2xl border border-royal-border px-6 py-5 space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-1 h-4 rounded-full bg-royal-gold"></div>
+                <h3 class="text-sm font-medium text-white">Бонусный кошелёк</h3>
+            </div>
+
+            {% if error %}
+                <div class="mb-3 text-xs text-red-300 bg-red-900/30 border border-red-700/60 rounded-xl px-3 py-2">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <div class="space-y-3 text-sm">
+                <div class="flex items-baseline justify-between">
+                    <span class="text-royal-muted">Текущий баланс</span>
+                    <span class="text-xl font-semibold text-royal-gold">
+                        {{ bonus.balance if bonus else 0 }}₽
+                    </span>
+                </div>
+
+                {% if bonus and bonus.referral_code %}
+                    <div class="border-t border-royal-border/60 pt-3 text-xs space-y-1.5">
+                        <div class="text-royal-muted">Реферальный код клиента</div>
+                        <div class="font-mono text-sm">
+                            {{ bonus.referral_code }}
+                        </div>
+                        {% if bonus.referred_by_code %}
+                            <div class="text-royal-muted">
+                                Пришёл по коду: <span class="font-mono">{{ bonus.referred_by_code }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="pt-3 border-t border-royal-border/60">
+                    <a href="{{ url_for('user_bonus_history', user_id=user.id) }}"
+                       class="text-[11px] uppercase tracking-[0.18em] text-royal-muted hover:text-royal-gold underline decoration-dotted underline-offset-4">
+                        Смотреть историю начислений и списаний
+                    </a>
+                </div>
+            </div>
+
+            <!-- Ручные операции по бонусам -->
+            <div class="mt-5 pt-4 border-t border-royal-border/60 space-y-3 text-sm">
+                <h4 class="text-xs uppercase tracking-[0.18em] text-royal-muted">
+                    Ручная операция с бонусами
+                </h4>
+                <p class="text-[11px] text-royal-muted">
+                    Опасное действие: требует подтверждения и комментария.
+                </p>
+
+                <form method="post"
+                      action="{{ url_for('user_manual_bonus', user_id=user.id) }}"
+                      class="space-y-3"
+                      onsubmit="return confirm('Подтвердите ручную операцию с бонусным балансом клиента. Продолжить?');">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="operation">
+                                Операция
+                            </label>
+                            <select id="operation"
+                                    name="operation"
+                                    class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold">
+                                <option value="accrual">Начислить</option>
+                                <option value="writeoff">Списать</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="amount">
+                                Сумма, ₽
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                id="amount"
+                                name="amount"
+                                required
+                                class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold"
+                                placeholder="100">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="comment">
+                            Комментарий (обязательно)
+                        </label>
+                        <textarea
+                            id="comment"
+                            name="comment"
+                            rows="2"
+                            required
+                            class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold"
+                            placeholder="Причина операции..."></textarea>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full mt-1 px-4 py-2 rounded-xl bg-royal-gold text-black text-xs font-semibold uppercase tracking-[0.2em] hover:bg-royal-gold-soft transition">
+                        Применить операцию
+                    </button>
+                </form>
+            </div>
+
+        </section>
+
+    </div>
+
+    <!-- Статусы заданий -->
+    <section class="bg-royal-surface rounded-2xl border border-royal-border px-6 py-5">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-1 h-4 rounded-full bg-royal-gold"></div>
+            <h3 class="text-sm font-medium text-white">Статусы заданий</h3>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Welcome bonus -->
+            <div class="bg-black/30 rounded-xl px-4 py-3">
+                <div class="text-xs text-royal-muted mb-1">Welcome bonus</div>
+                {% if bonus and bonus.welcome_given %}
+                    <div class="text-emerald-400 font-medium">✓ Получен</div>
+                {% else %}
+                    <div class="text-royal-muted">Не получен</div>
+                {% endif %}
+            </div>
+
+            <!-- Подписка на канал -->
+            <div class="bg-black/30 rounded-xl px-4 py-3">
+                <div class="text-xs text-royal-muted mb-1">Подписка на канал</div>
+                {% if bonus and bonus.channel_given %}
+                    <div class="text-emerald-400 font-medium">✓ Получен</div>
+                {% else %}
+                    <div class="text-royal-muted">Не получен</div>
+                {% endif %}
+            </div>
+
+            <!-- Отзыв Яндекс -->
+            <div class="bg-black/30 rounded-xl px-4 py-3">
+                <div class="text-xs text-royal-muted mb-1">Отзыв Яндекс</div>
+                {% if bonus and bonus.review_yandex_given %}
+                    <div class="text-emerald-400 font-medium">✓ Получен</div>
+                {% else %}
+                    <div class="text-royal-muted">Не получен</div>
+                {% endif %}
+            </div>
+
+            <!-- Реферальный бонус -->
+            <div class="bg-black/30 rounded-xl px-4 py-3">
+                <div class="text-xs text-royal-muted mb-1">Реферальные бонусы</div>
+                {% if bonus and bonus.referral_earned > 0 %}
+                    <div class="text-royal-gold font-medium">+{{ bonus.referral_earned }}₽</div>
+                {% else %}
+                    <div class="text-royal-muted">0₽</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Заявки на бонус за отзывы -->
+        {% if review_requests %}
+        <div class="mt-4 pt-4 border-t border-royal-border/60" x-data="{ expanded: false }">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-1 h-4 rounded-full bg-amber-500"></div>
+                    <h4 class="text-sm font-medium text-white">Заявки на бонус за отзыв</h4>
+                    <span class="text-xs text-royal-muted">({{ review_requests|length }})</span>
+                </div>
+                {% if review_requests|length > 3 %}
+                <button @click="expanded = !expanded"
+                        class="flex items-center gap-1.5 text-xs text-royal-gold hover:text-royal-gold-soft transition">
+                    <span x-text="expanded ? 'Свернуть' : 'Развернуть'"></span>
+                    <svg class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                {% endif %}
+            </div>
+            <div class="overflow-auto max-h-[400px]">
+                <div class="space-y-2">
+                    {% for req in review_requests %}
+                    {% set req_index = loop.index0 %}
+                    <div class="flex items-center justify-between bg-black/20 rounded-lg px-3 py-2 text-xs transition"
+                         x-show="expanded || {{ req_index }} < 3"
+                         x-transition>
+                        <div>
+                            <span class="text-royal-muted">{{ req.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                            {% if req.status.value == 'NEW' %}
+                                <span class="ml-2 px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">На модерации</span>
+                            {% elif req.status.value == 'CONFIRMED' %}
+                                <span class="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Подтверждён</span>
+                            {% elif req.status.value == 'REJECTED' %}
+                                <span class="ml-2 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">Отклонён</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('review_detail', review_id=req.id) }}"
+                           class="text-royal-gold hover:underline">
+                            Открыть
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- История записей -->
+    <section class="bg-royal-surface rounded-2xl border border-royal-border px-6 py-5" x-data="{ expanded: false }">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-1 h-4 rounded-full bg-blue-500"></div>
+                <h3 class="text-sm font-medium text-white">История записей</h3>
+                <span class="text-xs text-royal-muted">({{ all_records|length if all_records else 0 }})</span>
+            </div>
+            {% if all_records and all_records|length > 3 %}
+            <button @click="expanded = !expanded"
+                    class="flex items-center gap-1.5 text-xs text-royal-gold hover:text-royal-gold-soft transition">
+                <span x-text="expanded ? 'Свернуть' : 'Развернуть'"></span>
+                <svg class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            {% endif %}
+        </div>
+
+        {% if all_records %}
+        <div class="overflow-auto max-h-[400px]">
+            <table class="min-w-full text-sm">
+                <thead class="bg-black/40 text-xs uppercase tracking-[0.18em] text-royal-muted sticky top-0">
+                    <tr class="border-b border-royal-border">
+                        <th class="text-left px-4 py-2">Дата</th>
+                        <th class="text-left px-4 py-2">Услуга</th>
+                        <th class="text-left px-4 py-2">Мастер</th>
+                        <th class="text-left px-4 py-2">Статус</th>
+                        <th class="text-left px-4 py-2">Источник</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-royal-border/60">
+                    {% for record_item in all_records %}
+                    {% set record = record_item.data %}
+                    {% set source = record_item.source %}
+                    {% set loop_index = loop.index0 %}
+                    <tr class="hover:bg-white/5"
+                        x-show="expanded || {{ loop_index }} < 3"
+                        x-transition>
+                        <td class="px-4 py-2 text-xs">
+                            {% if source == "yclients" %}
+                                {% if record.datetime %}
+                                    {{ record.datetime[:16].replace('T', ' ') }}
+                                {% elif record.date %}
+                                    {{ record.date }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            {% else %}
+                                {% if record.created_at %}
+                                    {{ record.created_at[:16].replace('T', ' ') }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if source == "yclients" %}
+                                {% if record.services %}
+                                    {% for service in record.services[:2] %}
+                                        <div>{{ service.title or service.get('name') or '?' }}</div>
+                                    {% endfor %}
+                                    {% if record.services | length > 2 %}
+                                        <div class="text-royal-muted">+{{ record.services | length - 2 }} ещё</div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-royal-muted">—</span>
+                                {% endif %}
+                            {% else %}
+                                {% if record.event_type == "CLICK_BOOKING" %}
+                                    <span class="text-royal-muted">Нажатие на кнопку записи</span>
+                                {% else %}
+                                    <span class="text-royal-muted">Через бота</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if source == "yclients" %}
+                                {% set staff = record.staff or {} %}
+                                {{ staff.name or '—' }}
+                            {% else %}
+                                <span class="text-royal-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if source == "yclients" %}
+                                {% set attendance = record.attendance or record.visit_attendance or 0 %}
+                                {% if attendance == 1 %}
+                                    <span class="text-emerald-400">Выполнено</span>
+                                {% elif attendance == 2 %}
+                                    <span class="text-red-400">Не пришёл</span>
+                                {% elif attendance == -1 %}
+                                    <span class="text-royal-muted">Отменено</span>
+                                {% else %}
+                                    <span class="text-royal-gold">Ожидается</span>
+                                {% endif %}
+                            {% else %}
+                                {% if record.event_type == "COMPLETED" %}
+                                    <span class="text-emerald-400">Выполнено</span>
+                                {% elif record.event_type == "CANCELLED" %}
+                                    <span class="text-royal-muted">Отменено</span>
+                                {% elif record.event_type == "CREATED" %}
+                                    <span class="text-royal-gold">Создано</span>
+                                {% elif record.event_type == "CLICK_BOOKING" %}
+                                    <span class="text-blue-400">Нажата кнопка записи</span>
+                                {% else %}
+                                    <span class="text-royal-muted">{{ record.event_type or '—' }}</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if source == "yclients" %}
+                                <span class="text-blue-400">YClients</span>
+                            {% else %}
+                                <span class="text-royal-gold">Бот</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-sm text-royal-muted">
+            {% if user.yclients_client_id %}
+                Нет записей за последние 90 дней.
+            {% else %}
+                Клиент не привязан к YCLIENTS.
+            {% endif %}
+        </p>
+        {% endif %}
+    </section>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    // Проверяем параметр URL - если синхронизация уже была выполнена, не запускаем повторно
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('synced') === '1') {
+        return;
+    }
+    
+    // Проверяем, не идет ли уже синхронизация
+    if (window.syncInProgress) {
+        return;
+    }
+    
+    const overlay = document.getElementById('sync-overlay');
+    const content = document.getElementById('user-detail-content');
+    const progressText = document.getElementById('sync-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const syncStats = document.getElementById('sync-stats');
+    
+    if (!overlay || !content || !progressText || !progressBar || !syncStats) {
+        return;
+    }
+    
+    // Помечаем, что синхронизация началась
+    window.syncInProgress = true;
+    
+    // Показываем overlay и затемняем контент
+    overlay.classList.remove('hidden');
+    content.style.opacity = '0.3';
+    content.style.pointerEvents = 'none';
+    
+    // Сбрасываем прогресс
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Начало синхронизации...';
+    syncStats.textContent = '0 / 0';
+    
+    // Запускаем синхронизацию
+    fetch('{{ url_for("sync_balances") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const synced = data.synced || 0;
+            const total = data.total || 1;
+            const percentage = Math.min(100, Math.round((synced / total) * 100));
+            
+            // Обновляем прогресс-бар
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = `Синхронизировано: ${synced} из ${total} пользователей`;
+            syncStats.textContent = `${synced} / ${total}`;
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                content.style.opacity = '1';
+                content.style.pointerEvents = 'auto';
+                window.syncInProgress = false;
+                
+                // Обновляем страницу для отображения актуальных данных
+                const url = new URL(window.location);
+                url.searchParams.set('synced', '1');
+                window.location.href = url.toString();
+            }, 1500);
+        } else {
+            window.syncInProgress = false;
+            progressText.textContent = 'Ошибка синхронизации';
+            progressBar.style.width = '0%';
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                content.style.opacity = '1';
+                content.style.pointerEvents = 'auto';
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка синхронизации:', error);
+        window.syncInProgress = false;
+        progressText.textContent = 'Ошибка подключения';
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            content.style.opacity = '1';
+            content.style.pointerEvents = 'auto';
+        }, 2000);
+    });
+})();
+</script>
+
+{% endblock %}

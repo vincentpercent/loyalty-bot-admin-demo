@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки бонусов · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-2xl">
+
+    <!-- Заголовок -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-royal-gold/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+        
+        <div class="relative">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-royal-gold/30 to-royal-gold/10 border border-royal-gold/40 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-royal-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <div class="text-[10px] uppercase tracking-[0.22em] text-royal-gold">
+                    Глобальные настройки
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+                Настройки бонусной программы
+            </h1>
+            <p class="text-sm text-royal-muted mt-2 max-w-xl">
+                Управление суммами бонусов и параметрами бонусной системы. Все изменения логируются в журнале действий.
+            </p>
+        </div>
+    </div>
+
+    {% if message %}
+        <div class="text-xs text-emerald-300 bg-emerald-900/30 border border-emerald-700/60 rounded-xl px-3 py-2">
+            {{ message }}
+        </div>
+    {% endif %}
+
+    <form method="post" 
+          class="space-y-6 bg-royal-surface rounded-2xl border border-royal-border px-6 py-5"
+          onsubmit="return confirm('Подтвердите изменение настроек бонусной программы. Все изменения будут залогированы.');">
+        
+        <!-- Суммы бонусов и статусы -->
+        <div class="space-y-4">
+            <h3 class="text-sm uppercase tracking-[0.18em] text-royal-muted">
+                Задания и бонусы
+            </h3>
+
+            <!-- Welcome bonus -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-black/20 rounded-xl px-4 py-3">
+                <div class="md:col-span-2 space-y-1.5">
+                    <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="welcome_amount">
+                        Welcome bonus (новый клиент)
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        id="welcome_amount"
+                        name="welcome_amount"
+                        value="{{ config.welcome_amount }}"
+                        class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold">
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               name="welcome_enabled" 
+                               value="1"
+                               {% if config.welcome_enabled %}checked{% endif %}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-royal-gold"></div>
+                    </label>
+                    <span class="text-xs text-royal-muted">
+                        {% if config.welcome_enabled %}Активно{% else %}Отключено{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Channel bonus -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-black/20 rounded-xl px-4 py-3">
+                <div class="md:col-span-2 space-y-1.5">
+                    <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="channel_amount">
+                        Бонус за подписку на канал
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        id="channel_amount"
+                        name="channel_amount"
+                        value="{{ config.channel_amount }}"
+                        class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold">
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               name="channel_enabled" 
+                               value="1"
+                               {% if config.channel_enabled %}checked{% endif %}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-royal-gold"></div>
+                    </label>
+                    <span class="text-xs text-royal-muted">
+                        {% if config.channel_enabled %}Активно{% else %}Отключено{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Review bonus -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-black/20 rounded-xl px-4 py-3">
+                <div class="md:col-span-2 space-y-1.5">
+                    <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="review_amount">
+                        Бонус за отзыв
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        id="review_amount"
+                        name="review_amount"
+                        value="{{ config.review_amount }}"
+                        class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold">
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               name="review_enabled" 
+                               value="1"
+                               {% if config.review_enabled %}checked{% endif %}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-royal-gold"></div>
+                    </label>
+                    <span class="text-xs text-royal-muted">
+                        {% if config.review_enabled %}Активно{% else %}Отключено{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Referral bonus -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-black/20 rounded-xl px-4 py-3">
+                <div class="md:col-span-2 space-y-1.5">
+                    <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="referral_amount">
+                        Реферальный бонус
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        id="referral_amount"
+                        name="referral_amount"
+                        value="{{ config.referral_amount }}"
+                        class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold">
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               name="referral_enabled" 
+                               value="1"
+                               {% if config.referral_enabled %}checked{% endif %}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-royal-gold"></div>
+                    </label>
+                    <span class="text-xs text-royal-muted">
+                        {% if config.referral_enabled %}Активно{% else %}Отключено{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-royal-border/60">
+            <a href="/"
+               class="text-xs px-3 py-1.5 rounded-lg border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition">
+                ← Назад в панель
+            </a>
+
+            <button
+                type="submit"
+                class="px-5 py-2 rounded-xl bg-royal-gold text-black text-xs font-semibold uppercase tracking-[0.2em] hover:bg-royal-gold-soft transition">
+                Сохранить изменения
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+// Auto-submit при изменении toggle-кнопок
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        // Обновляем текст рядом с toggle
+        const label = this.closest('.flex').querySelector('span');
+        if (label) {
+            label.textContent = this.checked ? 'Активно' : 'Отключено';
+        }
+        // Отправляем форму без подтверждения
+        const form = this.closest('form');
+        form.onsubmit = null;
+        form.submit();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Bonus history · User #{{ user.id }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Заголовок -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-royal-gold/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+    
+    <div class="relative flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-royal-gold/30 to-royal-gold/10 border border-royal-gold/40 flex items-center justify-center">
+            <svg class="w-5 h-5 text-royal-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.22em] text-royal-gold">
+            История бонусов · ID {{ user.id }}
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+          {{ user.full_name or user.username or ('TG:' ~ user.telegram_id) }}
+        </h1>
+        <div class="flex items-center gap-3 mt-2 text-xs text-royal-muted">
+          <span>Telegram:</span>
+          {% if user.username %}
+            <a href="https://t.me/{{ user.username }}"
+               class="text-royal-gold hover:text-royal-gold-soft transition">
+              @{{ user.username }}
+            </a>
+          {% else %}
+            <span>{{ user.telegram_id }}</span>
+          {% endif %}
+          <span>·</span>
+          <a href="tg://user?id={{ user.telegram_id }}"
+             class="text-royal-gold hover:text-royal-gold-soft transition">
+            открыть в Telegram
+          </a>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('user_detail', user_id=user.id) }}"
+           class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/30 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          Профиль
+        </a>
+        <a href="{{ url_for('users_list') }}"
+           class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/50 hover:bg-royal-gold/20 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          К списку
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-royal-surface rounded-2xl border border-royal-border overflow-hidden">
+    <div class="border-b border-royal-border px-4 py-3 flex items-center justify-between gap-4">
+      <div class="text-[10px] uppercase tracking-[0.18em] text-royal-muted">
+        Транзакции бонусного кошелька
+      </div>
+      <div class="text-xs text-royal-muted">
+        Всего записей: {{ transactions|length }}
+      </div>
+    </div>
+
+    <div class="max-h-[70vh] overflow-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-black/40 text-xs uppercase tracking-[0.18em] text-royal-muted">
+          <tr class="border-b border-royal-border">
+            <th class="text-left px-4 py-2">Дата</th>
+            <th class="text-left px-4 py-2">Сумма</th>
+            <th class="text-left px-4 py-2">Тип операции</th>
+            <th class="text-left px-4 py-2">Источник</th>
+            <th class="text-left px-4 py-2">Комментарий</th>
+            <th class="text-left px-4 py-2">Кем создано</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-royal-border/60">
+        {% for tx in transactions %}
+          <tr>
+            <td class="px-4 py-2 text-xs text-royal-muted whitespace-nowrap">
+              {{ tx.created_at.strftime('%d.%m.%Y · %H:%M') if tx.created_at else '—' }}
+            </td>
+            <td class="px-4 py-2 text-sm">
+              {% set sign = '+' if tx.amount > 0 else '' %}
+              <span class="{% if tx.amount > 0 %}text-royal-gold{% else %}text-red-300{% endif %}">
+                {{ sign }}{{ tx.amount|int }}₽
+              </span>
+            </td>
+            <td class="px-4 py-2 text-xs text-royal-muted">
+              {# Тип операции определяем по знаку суммы #}
+              {% if tx.amount >= 0 %}
+                Начисление
+              {% else %}
+                Списание
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 text-xs text-royal-muted">
+              {# Человекочитаемый источник операции #}
+              {% if tx.source and tx.source.value == 'MANUAL' %}
+                Ручное действие администратора
+              {% elif tx.source and tx.source.value == 'REVIEW' %}
+                Бонус за отзыв
+              {% elif tx.source and tx.source.value == 'WELCOME' %}
+                Приветственный бонус
+              {% elif tx.source and tx.source.value == 'CHANNEL' %}
+                Бонус за подписку на канал
+              {% elif tx.source and tx.source.value == 'REFERRAL' %}
+                Реферальный бонус
+              {% elif tx.source and tx.source.value == 'SYSTEM' %}
+                Системная операция
+              {% else %}
+                {{ tx.source.value if tx.source else '—' }}
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 text-xs">
+              {{ tx.comment or '—' }}
+            </td>
+            <td class="px-4 py-2 text-xs text-royal-muted">
+              {{ tx.created_by or 'system' }}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" class="px-4 py-6 text-center text-sm text-royal-muted">
+              Для этого клиента пока нет ни одной бонусной операции.
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

@@ -1,0 +1,889 @@
+{% extends "base.html" %}
+
+{% block title %}Записи через бота · Аналитика{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Заголовок -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+    
+    <div class="relative flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-royal-gold/20 to-royal-gold/5 border border-royal-gold/30 flex items-center justify-center">
+            <svg class="w-5 h-5 text-royal-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.22em] text-royal-gold">
+            Аналитика записей
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+          Статистика бронирований
+        </h1>
+        <p class="text-sm text-royal-muted mt-2 max-w-xl">
+          Данные за последние <span class="text-royal-gold font-semibold">{{ stats.period_days }} дней</span> — 
+          отслеживание записей через Telegram-бота
+        </p>
+      </div>
+      <a href="{{ url_for('dashboard') }}"
+         class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/50 hover:bg-royal-gold/20 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Дашборд
+      </a>
+    </div>
+  </div>
+
+  <!-- Карточки с ключевыми показателями -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Создано -->
+    <div class="group relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-royal-surface to-royal-surface rounded-2xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 p-5">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-[10px] uppercase tracking-wider text-blue-400/60">Создано</div>
+          <svg class="w-5 h-5 text-blue-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        <div class="text-3xl font-bold text-blue-400 mb-1">{{ stats.created }}</div>
+        <div class="text-xs text-royal-muted">записей через бота</div>
+        <div class="mt-3 h-1 bg-royal-border rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style="width: 100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Выполнено -->
+    <div class="group relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-royal-surface to-royal-surface rounded-2xl border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300 p-5">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-[10px] uppercase tracking-wider text-emerald-400/60">Выполнено</div>
+          <svg class="w-5 h-5 text-emerald-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <div class="text-3xl font-bold text-emerald-400 mb-1">{{ stats.completed }}</div>
+        <div class="text-xs text-royal-muted">завершённых визитов</div>
+        {% set completed_rate = (stats.completed / stats.created * 100) if stats.created > 0 else 0 %}
+        <div class="mt-3 h-1 bg-royal-border rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000" style="width: {{ completed_rate }}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Отменено -->
+    <div class="group relative overflow-hidden bg-gradient-to-br from-red-500/10 via-royal-surface to-royal-surface rounded-2xl border border-red-500/20 hover:border-red-400/40 transition-all duration-300 p-5">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-[10px] uppercase tracking-wider text-red-400/60">Отменено</div>
+          <svg class="w-5 h-5 text-red-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        <div class="text-3xl font-bold text-red-400 mb-1">{{ stats.cancelled }}</div>
+        <div class="text-xs text-royal-muted">отменённых записей</div>
+        {% set cancelled_rate = (stats.cancelled / stats.created * 100) if stats.created > 0 else 0 %}
+        <div class="mt-3 h-1 bg-royal-border rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-1000" style="width: {{ cancelled_rate }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Динамика по дням -->
+  <div class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border">
+    <div class="absolute inset-0 bg-gradient-to-br from-royal-gold/5 via-transparent to-blue-500/5"></div>
+    
+    <div class="relative p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-8 rounded-full bg-royal-gold"></div>
+          <div>
+            <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+              Динамика по дням
+            </div>
+            <div class="text-xs text-royal-muted/60 mt-0.5">
+              Последние {{ stats.period_days }} дней
+            </div>
+          </div>
+        </div>
+        <!-- Переключатели типа графика -->
+        <div class="flex items-center gap-2 bg-royal-border/30 rounded-lg p-1">
+          <button id="dailyChartPrev" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-royal-gold/20 text-royal-muted hover:text-royal-gold transition text-sm">‹</button>
+          <span id="dailyChartTypeLabel" class="text-[10px] text-royal-gold uppercase tracking-wider min-w-[60px] text-center font-medium">Линии</span>
+          <button id="dailyChartNext" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-royal-gold/20 text-royal-muted hover:text-royal-gold transition text-sm">›</button>
+        </div>
+      </div>
+      
+      <!-- Легенда -->
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-blue-400"></div>
+          <span class="text-xs text-royal-muted">Создано</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span class="text-xs text-royal-muted">Выполнено</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+          <span class="text-xs text-royal-muted">Отменено</span>
+        </div>
+      </div>
+      
+      <div class="w-full h-72">
+        <canvas id="bookingsByDayChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Нижний блок: воронка и источники -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    <!-- Воронка: клик → запись → визит -->
+    <div class="bg-royal-surface rounded-2xl border border-royal-border px-5 py-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-blue-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Воронка конверсии
+          </div>
+        </div>
+        <!-- Переключатели типа графика -->
+        <div class="flex items-center gap-1">
+          <button id="funnelChartPrev" class="w-6 h-6 flex items-center justify-center rounded border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition text-xs">‹</button>
+          <span id="funnelChartTypeLabel" class="text-[10px] text-royal-muted uppercase tracking-wider min-w-[70px] text-center">Карточки</span>
+          <button id="funnelChartNext" class="w-6 h-6 flex items-center justify-center rounded border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition text-xs">›</button>
+        </div>
+      </div>
+
+      <!-- Вид: Карточки -->
+      <div id="funnelCardsView">
+        <div class="grid grid-cols-3 gap-3">
+          <!-- Клики -->
+          <div class="relative bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-xl p-4 border border-blue-500/30 overflow-hidden group hover:border-blue-400/50 transition-all">
+            <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full -mr-8 -mt-8"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-[10px] uppercase tracking-wider text-blue-300/70">Кликов</div>
+                <svg class="w-4 h-4 text-blue-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                </svg>
+              </div>
+              <div class="text-2xl font-bold text-blue-400">{{ funnel.clicks }}</div>
+              <div class="text-[10px] text-blue-300/50 mt-1">100%</div>
+            </div>
+          </div>
+          
+          <!-- Записи -->
+          <div class="relative bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-xl p-4 border border-amber-500/30 overflow-hidden group hover:border-amber-400/50 transition-all">
+            <div class="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full -mr-8 -mt-8"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-[10px] uppercase tracking-wider text-amber-300/70">Записей</div>
+                <svg class="w-4 h-4 text-amber-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div class="text-2xl font-bold text-amber-400">{{ funnel.created }}</div>
+              {% set created_pct = (funnel.created / funnel.clicks * 100) if funnel.clicks > 0 else 0 %}
+              <div class="text-[10px] text-amber-300/50 mt-1">{{ "%.0f"|format(created_pct) }}% от кликов</div>
+            </div>
+          </div>
+          
+          <!-- Визиты -->
+          <div class="relative bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-xl p-4 border border-emerald-500/30 overflow-hidden group hover:border-emerald-400/50 transition-all">
+            <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full -mr-8 -mt-8"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-[10px] uppercase tracking-wider text-emerald-300/70">Визитов</div>
+                <svg class="w-4 h-4 text-emerald-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div class="text-2xl font-bold text-emerald-400">{{ funnel.completed }}</div>
+              {% set completed_pct = (funnel.completed / funnel.clicks * 100) if funnel.clicks > 0 else 0 %}
+              <div class="text-[10px] text-emerald-300/50 mt-1">{{ "%.0f"|format(completed_pct) }}% конверсия</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Прогресс-бар воронки -->
+        <div class="mt-4 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-blue-400 w-16">Клики</span>
+            <div class="flex-1 h-2 bg-royal-border rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style="width: 100%"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-amber-400 w-16">Записи</span>
+            <div class="flex-1 h-2 bg-royal-border rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000" style="width: {{ created_pct }}%"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-emerald-400 w-16">Визиты</span>
+            <div class="flex-1 h-2 bg-royal-border rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000" style="width: {{ completed_pct }}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Контейнер для графиков Chart.js -->
+      <div id="funnelChartView" class="hidden" style="height: 240px;">
+        <canvas id="funnelChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Аналитика использования кнопок -->
+    <div class="bg-royal-surface rounded-2xl border border-royal-border px-5 py-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-emerald-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Популярность кнопок бота
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-xs text-royal-muted">
+            Всего: <span class="text-royal-gold font-semibold">{{ total_button_clicks }}</span>
+          </div>
+          {% if button_stats %}
+          <!-- Переключатели типа графика -->
+          <div class="flex items-center gap-1">
+            <button id="btnChartPrev" class="w-6 h-6 flex items-center justify-center rounded border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition text-xs">‹</button>
+            <span id="btnChartTypeLabel" class="text-[10px] text-royal-muted uppercase tracking-wider min-w-[70px] text-center">Бары</span>
+            <button id="btnChartNext" class="w-6 h-6 flex items-center justify-center rounded border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition text-xs">›</button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      {% if button_stats %}
+      <!-- Контейнер для прогресс-баров -->
+      <div id="btnBarsView" class="space-y-2">
+        {% for btn in button_stats %}
+        {% set pct = (btn.count / total_button_clicks * 100) if total_button_clicks > 0 else 0 %}
+        <div class="group">
+          <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full {% if pct < 5 %}bg-red-400{% elif pct < 15 %}bg-yellow-400{% else %}bg-emerald-400{% endif %}"></div>
+              <span class="text-sm text-royal-text truncate max-w-[200px]" title="{{ btn.name }}">
+                {{ btn.name }}
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-royal-muted">{{ btn.count }}</span>
+              <span class="text-xs font-medium {% if pct < 5 %}text-red-400{% elif pct < 15 %}text-yellow-400{% else %}text-emerald-400{% endif %}">
+                {{ "%.1f"|format(pct) }}%
+              </span>
+            </div>
+          </div>
+          <div class="h-1.5 bg-royal-border rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500
+              {% if pct < 5 %}bg-red-500{% elif pct < 15 %}bg-yellow-500{% else %}bg-emerald-500{% endif %}"
+              style="width: {{ pct }}%">
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      <!-- Контейнер для графиков Chart.js -->
+      <div id="btnChartView" class="hidden" style="height: 280px;">
+        <canvas id="buttonsChart"></canvas>
+      </div>
+      
+      <div class="pt-3 border-t border-royal-border/50">
+        <div class="flex items-center gap-4 text-[10px] text-royal-muted">
+          <div class="flex items-center gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-red-400"></div> &lt; 5% — редко
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-yellow-400"></div> 5-15% — средне
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-emerald-400"></div> &gt; 15% — популярно
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-center py-8 text-royal-muted text-sm">
+        <svg class="w-12 h-12 mx-auto text-royal-muted/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <p>Пока нет данных по кнопкам.</p>
+        <p class="text-xs mt-1">Статистика появится после нажатий пользователей в боте.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Подключаем Chart.js и инициализируем графики -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Данные по дням из контроллера
+  const dailyLabels = {{ daily_labels | tojson }};
+  const dailyCreated = {{ daily_created | tojson }};
+  const dailyCompleted = {{ daily_completed | tojson }};
+  const dailyCancelled = {{ daily_cancelled | tojson }};
+
+  const bookingsCanvas = document.getElementById('bookingsByDayChart');
+  const dailyPrevBtn = document.getElementById('dailyChartPrev');
+  const dailyNextBtn = document.getElementById('dailyChartNext');
+  const dailyTypeLabel = document.getElementById('dailyChartTypeLabel');
+
+  if (bookingsCanvas && dailyLabels.length) {
+    const ctx = bookingsCanvas.getContext('2d');
+
+    // Типы графиков
+    const chartTypes = [
+      { type: 'line', fill: false, label: 'Линии' },
+      { type: 'line', fill: true, label: 'Области' },
+      { type: 'bar', fill: false, label: 'Столбцы' }
+    ];
+    let currentTypeIndex = 0;
+
+    const baseOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 500 },
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: {
+          labels: { color: '#A3A3A3', font: { size: 11 } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          titleColor: '#D4AF37',
+          bodyColor: '#fff',
+          borderColor: '#D4AF37',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 10
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#A3A3A3', font: { size: 10 } },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, color: '#A3A3A3', font: { size: 10 } },
+          grid: { color: 'rgba(38,38,38,0.5)' }
+        }
+      }
+    };
+
+    function buildDatasets(ct) {
+      const isBar = ct.type === 'bar';
+      return [
+        {
+          label: 'Создано',
+          data: dailyCreated,
+          tension: 0.4,
+          borderWidth: isBar ? 0 : 3,
+          borderColor: '#60A5FA',
+          backgroundColor: ct.fill ? 'rgba(96, 165, 250, 0.15)' : 'rgba(96, 165, 250, 0.85)',
+          fill: ct.fill,
+          pointRadius: isBar ? 0 : 4,
+          pointBackgroundColor: '#60A5FA',
+          pointBorderColor: '#1a1a1a',
+          pointBorderWidth: 2,
+          borderRadius: isBar ? 6 : 0
+        },
+        {
+          label: 'Выполнено',
+          data: dailyCompleted,
+          tension: 0.4,
+          borderWidth: isBar ? 0 : 3,
+          borderColor: '#34D399',
+          backgroundColor: ct.fill ? 'rgba(52, 211, 153, 0.15)' : 'rgba(52, 211, 153, 0.85)',
+          fill: ct.fill,
+          pointRadius: isBar ? 0 : 4,
+          pointBackgroundColor: '#34D399',
+          pointBorderColor: '#1a1a1a',
+          pointBorderWidth: 2,
+          borderRadius: isBar ? 6 : 0
+        },
+        {
+          label: 'Отменено',
+          data: dailyCancelled,
+          tension: 0.4,
+          borderWidth: isBar ? 0 : 3,
+          borderColor: '#F87171', /* красный */
+          backgroundColor: ct.fill ? 'rgba(248, 113, 113, 0.15)' : 'rgba(248, 113, 113, 0.85)',
+          fill: ct.fill,
+          pointRadius: isBar ? 0 : 4,
+          pointBackgroundColor: '#F87171',
+          pointBorderColor: '#1a1a1a',
+          pointBorderWidth: 2,
+          borderRadius: isBar ? 6 : 0
+        }
+      ];
+    }
+
+    let dailyChart = new Chart(ctx, {
+      type: chartTypes[currentTypeIndex].type,
+      data: { labels: dailyLabels, datasets: buildDatasets(chartTypes[currentTypeIndex]) },
+      options: baseOptions
+    });
+
+    function updateDailyChart(direction) {
+      currentTypeIndex = (currentTypeIndex + direction + chartTypes.length) % chartTypes.length;
+      const ct = chartTypes[currentTypeIndex];
+      dailyTypeLabel.textContent = ct.label;
+
+      dailyChart.destroy();
+      dailyChart = new Chart(ctx, {
+        type: ct.type,
+        data: { labels: dailyLabels, datasets: buildDatasets(ct) },
+        options: baseOptions
+      });
+    }
+
+    if (dailyPrevBtn) dailyPrevBtn.addEventListener('click', () => updateDailyChart(-1));
+    if (dailyNextBtn) dailyNextBtn.addEventListener('click', () => updateDailyChart(1));
+  }
+
+  // Воронка с переключением видов
+  const funnelData = {{ funnel_counts | tojson }};
+  const funnelCardsView = document.getElementById('funnelCardsView');
+  const funnelChartView = document.getElementById('funnelChartView');
+  const funnelCanvas = document.getElementById('funnelChart');
+  const funnelPrevBtn = document.getElementById('funnelChartPrev');
+  const funnelNextBtn = document.getElementById('funnelChartNext');
+  const funnelTypeLabel = document.getElementById('funnelChartTypeLabel');
+
+  if (funnelCanvas && funnelData) {
+    const funnelLabels = ['👆 Клики', '📝 Записи', '✅ Визиты'];
+    const funnelValues = [
+      funnelData.clicks || 0,
+      funnelData.created || 0,
+      funnelData.completed || 0,
+    ];
+    
+    const funnelColors = {
+      bg: ['rgba(59, 130, 246, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+      border: ['#3B82F6', '#F59E0B', '#10B981']
+    };
+
+    // Типы визуализации воронки
+    const funnelViews = [
+      { id: 'cards', label: 'Карточки' },
+      { id: 'horizontalBar', label: 'Столбцы' },
+      { id: 'verticalBar', label: 'Колонки' },
+      { id: 'doughnut', label: 'Кольцо' },
+      { id: 'polarArea', label: 'Полярная' }
+    ];
+    let currentFunnelViewIndex = 0;
+    let funnelChart = null;
+
+    function renderFunnelChart() {
+      const view = funnelViews[currentFunnelViewIndex];
+      
+      // Показываем/скрываем контейнеры
+      if (view.id === 'cards') {
+        funnelCardsView.classList.remove('hidden');
+        funnelChartView.classList.add('hidden');
+        if (funnelChart) {
+          funnelChart.destroy();
+          funnelChart = null;
+        }
+        return;
+      }
+
+      funnelCardsView.classList.add('hidden');
+      funnelChartView.classList.remove('hidden');
+
+      if (funnelChart) {
+        funnelChart.destroy();
+      }
+
+      const ctx = funnelCanvas.getContext('2d');
+      
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 400 },
+        plugins: {
+          legend: {
+            display: view.id !== 'horizontalBar' && view.id !== 'verticalBar',
+            position: 'bottom',
+            labels: {
+              color: '#A3A3A3',
+              font: { size: 11 },
+              padding: 15,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.9)',
+            titleColor: '#D4AF37',
+            bodyColor: '#fff',
+            borderColor: '#D4AF37',
+            borderWidth: 1,
+            cornerRadius: 8,
+            padding: 12
+          }
+        }
+      };
+
+      if (view.id === 'horizontalBar') {
+        funnelChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: funnelLabels,
+            datasets: [{
+              data: funnelValues,
+              backgroundColor: funnelColors.bg,
+              borderColor: funnelColors.border,
+              borderWidth: 2,
+              borderRadius: 8,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            ...commonOptions,
+            indexAxis: 'y',
+            plugins: { ...commonOptions.plugins, legend: { display: false } },
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: { color: '#A3A3A3', font: { size: 10 } },
+                grid: { color: 'rgba(38,38,38,0.5)' }
+              },
+              y: {
+                ticks: { color: '#A3A3A3', font: { size: 11 } },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      } else if (view.id === 'verticalBar') {
+        funnelChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: funnelLabels,
+            datasets: [{
+              data: funnelValues,
+              backgroundColor: funnelColors.bg,
+              borderColor: funnelColors.border,
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            ...commonOptions,
+            plugins: { ...commonOptions.plugins, legend: { display: false } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#A3A3A3', font: { size: 10 } },
+                grid: { color: 'rgba(38,38,38,0.5)' }
+              },
+              x: {
+                ticks: { color: '#A3A3A3', font: { size: 11 } },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      } else if (view.id === 'doughnut') {
+        funnelChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: funnelLabels,
+            datasets: [{
+              data: funnelValues,
+              backgroundColor: funnelColors.bg,
+              borderColor: '#1a1a1a',
+              borderWidth: 3,
+              hoverOffset: 10
+            }]
+          },
+          options: {
+            ...commonOptions,
+            cutout: '50%'
+          }
+        });
+      } else if (view.id === 'polarArea') {
+        funnelChart = new Chart(ctx, {
+          type: 'polarArea',
+          data: {
+            labels: funnelLabels,
+            datasets: [{
+              data: funnelValues,
+              backgroundColor: funnelColors.bg.map(c => c.replace('0.8', '0.7')),
+              borderColor: funnelColors.border,
+              borderWidth: 2
+            }]
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              r: {
+                ticks: { display: false },
+                grid: { color: 'rgba(38,38,38,0.5)' }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function updateFunnelView(direction) {
+      currentFunnelViewIndex = (currentFunnelViewIndex + direction + funnelViews.length) % funnelViews.length;
+      funnelTypeLabel.textContent = funnelViews[currentFunnelViewIndex].label;
+      renderFunnelChart();
+    }
+
+    if (funnelPrevBtn) funnelPrevBtn.addEventListener('click', () => updateFunnelView(-1));
+    if (funnelNextBtn) funnelNextBtn.addEventListener('click', () => updateFunnelView(1));
+  }
+
+  // Аналитика кнопок с переключением графиков
+  const buttonStats = {{ button_stats | tojson }};
+  const totalClicks = {{ total_button_clicks }};
+  
+  if (buttonStats && buttonStats.length > 0) {
+    const btnBarsView = document.getElementById('btnBarsView');
+    const btnChartView = document.getElementById('btnChartView');
+    const btnChartCanvas = document.getElementById('buttonsChart');
+    const btnPrevBtn = document.getElementById('btnChartPrev');
+    const btnNextBtn = document.getElementById('btnChartNext');
+    const btnTypeLabel = document.getElementById('btnChartTypeLabel');
+
+    // Подготовка данных
+    const btnLabels = buttonStats.map(b => {
+      // Сокращаем длинные названия
+      const name = b.name.replace('[callback] ', '');
+      return name.length > 20 ? name.substring(0, 18) + '…' : name;
+    });
+    const btnValues = buttonStats.map(b => b.count);
+    
+    // Генерация цветов в зависимости от процента использования
+    const btnColors = buttonStats.map(b => {
+      const pct = totalClicks > 0 ? (b.count / totalClicks * 100) : 0;
+      if (pct < 5) return { bg: 'rgba(239, 68, 68, 0.8)', border: '#EF4444' };       // red
+      if (pct < 15) return { bg: 'rgba(251, 191, 36, 0.8)', border: '#FBBF24' };     // yellow
+      return { bg: 'rgba(16, 185, 129, 0.8)', border: '#10B981' };                    // green
+    });
+
+    // Типы визуализации
+    const chartViews = [
+      { id: 'bars', label: 'Бары' },
+      { id: 'horizontalBar', label: 'Столбцы' },
+      { id: 'doughnut', label: 'Кольцо' },
+      { id: 'polarArea', label: 'Полярная' },
+      { id: 'radar', label: 'Радар' }
+    ];
+    let currentViewIndex = 0;
+    let buttonsChart = null;
+
+    function renderButtonsChart() {
+      const view = chartViews[currentViewIndex];
+      
+      // Показываем/скрываем контейнеры
+      if (view.id === 'bars') {
+        btnBarsView.classList.remove('hidden');
+        btnChartView.classList.add('hidden');
+        if (buttonsChart) {
+          buttonsChart.destroy();
+          buttonsChart = null;
+        }
+        return;
+      }
+
+      btnBarsView.classList.add('hidden');
+      btnChartView.classList.remove('hidden');
+
+      if (buttonsChart) {
+        buttonsChart.destroy();
+      }
+
+      const ctx = btnChartCanvas.getContext('2d');
+      
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 400 },
+        plugins: {
+          legend: {
+            display: view.id !== 'horizontalBar',
+            position: 'right',
+            labels: {
+              color: '#A3A3A3',
+              font: { size: 10 },
+              padding: 8,
+              boxWidth: 12
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.9)',
+            titleColor: '#D4AF37',
+            bodyColor: '#fff',
+            borderColor: '#D4AF37',
+            borderWidth: 1,
+            cornerRadius: 8,
+            padding: 10,
+            callbacks: {
+              label: function(context) {
+                const value = context.raw;
+                const pct = totalClicks > 0 ? ((value / totalClicks) * 100).toFixed(1) : 0;
+                return ` ${value} нажатий (${pct}%)`;
+              }
+            }
+          }
+        }
+      };
+
+      if (view.id === 'horizontalBar') {
+        buttonsChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: btnLabels,
+            datasets: [{
+              data: btnValues,
+              backgroundColor: btnColors.map(c => c.bg),
+              borderColor: btnColors.map(c => c.border),
+              borderWidth: 1,
+              borderRadius: 4
+            }]
+          },
+          options: {
+            ...commonOptions,
+            indexAxis: 'y',
+            plugins: {
+              ...commonOptions.plugins,
+              legend: { display: false }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: { color: '#A3A3A3', font: { size: 10 } },
+                grid: { color: 'rgba(38,38,38,0.5)' }
+              },
+              y: {
+                ticks: { color: '#A3A3A3', font: { size: 10 } },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      } else if (view.id === 'doughnut') {
+        buttonsChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: btnLabels,
+            datasets: [{
+              data: btnValues,
+              backgroundColor: btnColors.map(c => c.bg),
+              borderColor: '#1a1a1a',
+              borderWidth: 2,
+              hoverOffset: 8
+            }]
+          },
+          options: {
+            ...commonOptions,
+            cutout: '55%',
+            plugins: {
+              ...commonOptions.plugins,
+              legend: {
+                ...commonOptions.plugins.legend,
+                position: 'right'
+              }
+            }
+          }
+        });
+      } else if (view.id === 'polarArea') {
+        buttonsChart = new Chart(ctx, {
+          type: 'polarArea',
+          data: {
+            labels: btnLabels,
+            datasets: [{
+              data: btnValues,
+              backgroundColor: btnColors.map(c => c.bg.replace('0.8', '0.7')),
+              borderColor: btnColors.map(c => c.border),
+              borderWidth: 1
+            }]
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              r: {
+                ticks: { display: false },
+                grid: { color: 'rgba(38,38,38,0.5)' }
+              }
+            }
+          }
+        });
+      } else if (view.id === 'radar') {
+        buttonsChart = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: btnLabels,
+            datasets: [{
+              label: 'Нажатий',
+              data: btnValues,
+              backgroundColor: 'rgba(212, 175, 55, 0.2)',
+              borderColor: '#D4AF37',
+              borderWidth: 2,
+              pointBackgroundColor: '#D4AF37',
+              pointBorderColor: '#fff',
+              pointRadius: 4
+            }]
+          },
+          options: {
+            ...commonOptions,
+            plugins: {
+              ...commonOptions.plugins,
+              legend: { display: false }
+            },
+            scales: {
+              r: {
+                beginAtZero: true,
+                ticks: { 
+                  color: '#A3A3A3', 
+                  font: { size: 9 },
+                  backdropColor: 'transparent'
+                },
+                grid: { color: 'rgba(38,38,38,0.5)' },
+                pointLabels: { 
+                  color: '#A3A3A3', 
+                  font: { size: 9 } 
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function updateButtonsView(direction) {
+      currentViewIndex = (currentViewIndex + direction + chartViews.length) % chartViews.length;
+      btnTypeLabel.textContent = chartViews[currentViewIndex].label;
+      renderButtonsChart();
+    }
+
+    if (btnPrevBtn) btnPrevBtn.addEventListener('click', () => updateButtonsView(-1));
+    if (btnNextBtn) btnNextBtn.addEventListener('click', () => updateButtonsView(1));
+  }
+</script>
+{% endblock %}
+

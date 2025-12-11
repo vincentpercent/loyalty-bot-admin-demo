@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал действий · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="text-[10px] uppercase tracking-[0.22em] text-royal-muted mb-1">
+        Журнал действий администратора
+      </div>
+      <h1 class="text-xl font-semibold">
+        Audit log
+      </h1>
+      <p class="text-sm text-royal-muted mt-1.5">
+        Здесь фиксируются все изменения бонусов, отзывов и настроек.
+      </p>
+    </div>
+
+    <form method="get" class="flex items-center gap-2 text-sm">
+      <span class="text-royal-muted text-xs uppercase tracking-[0.18em]">
+        Фильтр по действию
+      </span>
+      <select
+        name="action"
+        onchange="this.form.submit()"
+        class="bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-royal-gold"
+      >
+        {% set current_action = request.query_params.get('action') %}
+        <option value="">Все действия</option>
+        <option value="BONUS_CONFIG_UPDATE"
+                {% if current_action == 'BONUS_CONFIG_UPDATE' %}selected{% endif %}>
+          Изменение настроек бонусов
+        </option>
+        <option value="BONUS_MANUAL_ACCRUAL"
+                {% if current_action == 'BONUS_MANUAL_ACCRUAL' %}selected{% endif %}>
+          Ручное начисление бонусов
+        </option>
+        <option value="BONUS_MANUAL_WRITE_OFF"
+                {% if current_action == 'BONUS_MANUAL_WRITE_OFF' %}selected{% endif %}>
+          Ручное списание бонусов
+        </option>
+        <option value="BONUS_MANUAL_BULK_ACCRUAL"
+                {% if current_action == 'BONUS_MANUAL_BULK_ACCRUAL' %}selected{% endif %}>
+          Массовое начисление бонусов
+        </option>
+        <option value="REVIEW_CONFIRM"
+                {% if current_action == 'REVIEW_CONFIRM' %}selected{% endif %}>
+          Подтверждение отзыва
+        </option>
+        <option value="REVIEW_REJECT"
+                {% if current_action == 'REVIEW_REJECT' %}selected{% endif %}>
+          Отклонение отзыва
+        </option>
+      </select>
+    </form>
+  </div>
+
+  <div class="bg-royal-surface rounded-2xl border border-royal-border overflow-hidden">
+    <div class="max-h-[70vh] overflow-auto divide-y divide-royal-border/60">
+      {% for log in logs %}
+        <div class="px-4 py-3 flex gap-4 items-start hover:bg-white/5">
+          <!-- время -->
+          <div class="w-40 text-xs text-royal-muted pt-1 whitespace-nowrap">
+            {{ log.created_at.strftime('%d.%m.%Y · %H:%M') if log.created_at else '—' }}
+          </div>
+
+          <!-- основная часть -->
+          <div class="flex-1 space-y-1.5">
+            <div class="flex items-center gap-3">
+              <span class="text-sm">
+                {{ log.admin_username or '—' }}
+              </span>
+              <span class="px-3 py-1 rounded-full border border-royal-border text-[10px] uppercase tracking-[0.22em] text-royal-muted">
+                {# Человеческое имя действия #}
+                {% if log.action == 'BONUS_CONFIG_UPDATE' %}
+                  Изменение настроек бонусов
+                {% elif log.action == 'BONUS_MANUAL_ACCRUAL' %}
+                  Ручное начисление бонусов
+                {% elif log.action == 'BONUS_MANUAL_WRITE_OFF' %}
+                  Ручное списание бонусов
+                {% elif log.action == 'BONUS_MANUAL_BULK_ACCRUAL' %}
+                  Массовое начисление бонусов
+                {% elif log.action == 'REVIEW_CONFIRM' %}
+                  Подтверждение отзыва
+                {% elif log.action == 'REVIEW_REJECT' %}
+                  Отклонение отзыва
+                {% else %}
+                  {{ log.action }}
+                {% endif %}
+              </span>
+            </div>
+
+            <div class="text-sm text-royal-muted">
+              {# Человеческое название сущности, БЕЗ ID #}
+              {% if log.entity_type == 'bonus_config' %}
+                Настройки бонусной программы
+              {% elif log.entity_type == 'user_bonus' %}
+                Бонусы клиента
+              {% elif log.entity_type == 'user_bonus_bulk' %}
+                Бонусы нескольких клиентов
+              {% elif log.entity_type == 'review_request' %}
+                Заявка на бонус за отзыв
+              {% else %}
+                {{ log.entity_type }}
+              {% endif %}
+            </div>
+
+            <div class="text-xs mt-1 whitespace-pre-line">
+              {{ log.payload }}
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="px-4 py-6 text-center text-sm text-royal-muted">
+          Записей в журнале пока нет.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

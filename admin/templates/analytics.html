@@ -1,0 +1,622 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Переключатель разделов аналитики -->
+  <div class="flex flex-wrap gap-3 text-xs">
+    <a href="{{ url_for('analytics') }}"
+       class="px-4 py-2 rounded-xl bg-gradient-to-r from-royal-gold/20 to-royal-gold/5 border border-royal-gold text-royal-gold uppercase tracking-[0.15em] font-medium">
+      Бонусы и маркетинг
+    </a>
+    <a href="{{ url_for('bookings_analytics') }}"
+       class="px-4 py-2 rounded-xl border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold uppercase tracking-[0.15em] transition">
+      Записи через бота
+    </a>
+  </div>
+
+  <!-- Заголовок -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+    
+    <div class="relative flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-royal-gold/20 to-royal-gold/5 border border-royal-gold/30 flex items-center justify-center">
+            <svg class="w-5 h-5 text-royal-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.22em] text-royal-gold">
+            Аналитика
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+          Бонусная программа и маркетинг
+        </h1>
+        <p class="text-sm text-royal-muted mt-2 max-w-xl">
+          Показатели эффективности бонусной системы, вовлечённость клиентов и маркетинговые метрики
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{{ url_for('dashboard') }}"
+           class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/50 hover:bg-royal-gold/20 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Дашборд
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Контейнер для контента с overlay синхронизации -->
+  <div class="relative" id="analytics-content-container">
+    <!-- Overlay для синхронизации -->
+    <div id="sync-overlay" class="hidden absolute inset-0 bg-royal-black/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-2xl">
+      <div class="text-center w-full max-w-md px-6">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-royal-gold border-t-transparent mb-4"></div>
+        <p class="text-sm text-royal-gold font-medium mb-4">Синхронизация балансов...</p>
+        
+        <!-- Прогресс-бар -->
+        <div class="relative w-full h-3 bg-royal-border/30 rounded-full overflow-hidden mb-2">
+            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-royal-gold via-amber-500 to-royal-gold rounded-full transition-all duration-300 ease-out" style="width: 0%">
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+            </div>
+        </div>
+        
+        <!-- Текст прогресса -->
+        <p class="text-xs text-royal-muted" id="sync-progress">Подключение к YClients</p>
+        <p class="text-xs text-royal-gold/70 mt-1" id="sync-stats">0 / 0</p>
+      </div>
+    </div>
+
+  <!-- KPI по бонусам -->
+  <section id="analytics-content">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-1 h-4 rounded-full bg-royal-gold"></div>
+      <div class="text-[10px] uppercase tracking-[0.22em] text-royal-muted">
+        Ключевые показатели
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Начислено -->
+      <div class="group relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-royal-surface to-royal-surface rounded-2xl border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300 p-5">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+        <div class="relative">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] uppercase tracking-wider text-emerald-400/70">Начислено</span>
+            <svg class="w-5 h-5 text-emerald-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+          </div>
+          <div class="text-3xl font-bold text-emerald-400">{{ total_accrual }}₽</div>
+          <div class="text-xs text-royal-muted mt-1">всего за всё время</div>
+        </div>
+      </div>
+
+      <!-- Списано -->
+      <div class="group relative overflow-hidden bg-gradient-to-br from-red-500/10 via-royal-surface to-royal-surface rounded-2xl border border-red-500/20 hover:border-red-400/40 transition-all duration-300 p-5">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+        <div class="relative">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] uppercase tracking-wider text-red-400/70">Списано</span>
+            <svg class="w-5 h-5 text-red-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+            </svg>
+          </div>
+          <div class="text-3xl font-bold text-red-400">{{ total_writeoff }}₽</div>
+          <div class="text-xs text-royal-muted mt-1">использовано клиентами</div>
+        </div>
+      </div>
+
+      <!-- Обязательства -->
+      <div class="group relative overflow-hidden bg-gradient-to-br from-royal-gold/15 via-royal-surface to-royal-surface rounded-2xl border border-royal-gold/40 hover:border-royal-gold/60 transition-all duration-300 p-5 shadow-lg shadow-royal-gold/5">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-royal-gold/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+        <div class="relative">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] uppercase tracking-wider text-royal-gold">Обязательства</span>
+            <svg class="w-5 h-5 text-royal-gold/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="text-3xl font-bold text-white">{{ obligations }}₽</div>
+          <div class="text-xs text-royal-muted mt-1">несписанные бонусы</div>
+        </div>
+      </div>
+
+      <!-- Подписка на канал -->
+      <div class="group relative overflow-hidden bg-gradient-to-br from-cyan-500/10 via-royal-surface to-royal-surface rounded-2xl border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300 p-5">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-cyan-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+        <div class="relative">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] uppercase tracking-wider text-cyan-400/70">Подписка</span>
+            <svg class="w-5 h-5 text-cyan-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </div>
+          <div class="text-3xl font-bold text-cyan-400">{{ channel_share }}%</div>
+          <div class="text-xs text-royal-muted mt-1">{{ channel_users }} из {{ total_users }} клиентов</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- График начислено / списано -->
+  <section class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border">
+    <div class="absolute inset-0 bg-gradient-to-br from-royal-gold/5 via-transparent to-emerald-500/5"></div>
+    
+    <div class="relative p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-8 rounded-full bg-royal-gold"></div>
+          <div>
+            <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+              Динамика бонусов
+            </div>
+            <div class="text-xs text-royal-muted/60 mt-0.5">
+              Последние 30 дней
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-royal-border/30 rounded-lg p-1">
+          <button id="chartPrev" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-royal-gold/20 text-royal-muted hover:text-royal-gold transition text-sm">‹</button>
+          <span id="chartTypeLabel" class="text-[10px] text-royal-gold uppercase tracking-wider min-w-[60px] text-center font-medium">Линии</span>
+          <button id="chartNext" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-royal-gold/20 text-royal-muted hover:text-royal-gold transition text-sm">›</button>
+        </div>
+      </div>
+      
+      <!-- Легенда -->
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-royal-gold"></div>
+          <span class="text-xs text-royal-muted">Начислено</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-gray-500"></div>
+          <span class="text-xs text-royal-muted">Списано</span>
+        </div>
+      </div>
+
+      <div class="h-72">
+        <canvas id="bonusFlowChart" class="w-full h-full"></canvas>
+        <div id="bonusFlowStub"
+             class="text-center py-10 {% if flow_labels %}hidden{% endif %}">
+          <svg class="w-12 h-12 mx-auto text-royal-muted/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <p class="text-sm text-royal-muted">Пока нет данных за последние 30 дней</p>
+          <p class="text-xs text-royal-muted/60 mt-1">График появится при операциях с бонусами</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Маркетинговые метрики -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Отзывы -->
+    <div class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border p-5">
+      <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent"></div>
+      <div class="relative space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-amber-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Отзывы и модерация
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-royal-border/20 rounded-xl p-4">
+            <div class="text-2xl font-bold text-amber-400">{{ confirmed_reviews }}</div>
+            <div class="text-xs text-royal-muted mt-1">подтверждённых отзывов</div>
+          </div>
+          <div class="bg-royal-border/20 rounded-xl p-4">
+            {% if avg_moderation_minutes is not none %}
+            <div class="text-2xl font-bold text-white">{{ avg_moderation_minutes }}<span class="text-base font-normal text-royal-muted"> мин</span></div>
+            {% else %}
+            <div class="text-lg font-medium text-royal-muted">—</div>
+            {% endif %}
+            <div class="text-xs text-royal-muted mt-1">среднее время модерации</div>
+          </div>
+        </div>
+        
+        <p class="text-xs text-royal-muted/70">
+          Чем быстрее обрабатываются заявки на бонус за отзыв, тем выше лояльность клиентов.
+        </p>
+      </div>
+    </div>
+
+    <!-- Аудитория -->
+    <div class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border p-5">
+      <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent"></div>
+      <div class="relative space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-indigo-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Аудитория и охват
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-royal-border/20 rounded-xl p-4">
+            <div class="text-2xl font-bold text-white">{{ total_users }}</div>
+            <div class="text-xs text-royal-muted mt-1">пользователей бота</div>
+          </div>
+          <div class="bg-royal-border/20 rounded-xl p-4">
+            <div class="text-2xl font-bold text-indigo-400">{{ channel_users }}</div>
+            <div class="text-xs text-royal-muted mt-1">подписаны на канал</div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="flex-1 h-2 bg-royal-border rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full" style="width: {{ channel_share }}%"></div>
+          </div>
+          <span class="text-sm font-medium text-indigo-400">{{ channel_share }}%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Воронки -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Onboarding воронка -->
+    <div class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border p-5">
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent"></div>
+      <div class="relative space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-blue-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Onboarding-воронка
+          </div>
+        </div>
+        
+        <div class="space-y-3">
+          {% for step in onboarding_steps %}
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-medium">{{ loop.index }}</span>
+                <span class="text-royal-muted">{{ step.label }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-white font-medium">{{ step.value }}</span>
+                <span class="text-royal-muted/60">{{ "%.1f" | format(step.pct) }}%</span>
+              </div>
+            </div>
+            <div class="h-2 rounded-full bg-royal-border overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500"
+                   style="width: {{ step.pct }}%;"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Воронка бонусных задач -->
+    <div class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border p-5">
+      <div class="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-transparent"></div>
+      <div class="relative space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-violet-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Воронка бонусных задач
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          {% for task in bonus_tasks %}
+          <div class="flex items-center justify-between p-3 rounded-xl bg-royal-border/20 hover:bg-royal-border/30 transition-colors">
+            <span class="text-sm text-royal-muted">{{ task.name }}</span>
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium text-white">{{ task.completed_users }}</span>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400">{{ "%.1f" | format(task.coverage_pct) }}%</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Эффективность -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Welcome Bonus -->
+    <div class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border p-5">
+      <div class="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-transparent to-transparent"></div>
+      <div class="relative space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-pink-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Эффективность Welcome Bonus
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-3">
+          <div class="text-center p-3 rounded-xl bg-royal-border/20">
+            <div class="text-xl font-bold text-white">{{ effectiveness_stats.welcome_users }}</div>
+            <div class="text-[10px] text-royal-muted mt-1">получили</div>
+          </div>
+          <div class="text-center p-3 rounded-xl bg-royal-border/20">
+            <div class="text-xl font-bold text-pink-400">{{ effectiveness_stats.welcome_with_visit }}</div>
+            <div class="text-[10px] text-royal-muted mt-1">пришли</div>
+          </div>
+          <div class="text-center p-3 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-500/5 border border-pink-500/30">
+            <div class="text-xl font-bold text-pink-400">{{ "%.0f" | format(effectiveness_stats.welcome_effectiveness) }}%</div>
+            <div class="text-[10px] text-pink-300/70 mt-1">конверсия</div>
+          </div>
+        </div>
+        
+        <p class="text-xs text-royal-muted/70">
+          Какой % новых клиентов с welcome-бонусом пришёл на первый визит.
+        </p>
+      </div>
+    </div>
+
+    <!-- Реферальная программа -->
+    <div class="relative overflow-hidden bg-royal-surface rounded-2xl border border-royal-border p-5">
+      <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 via-transparent to-transparent"></div>
+      <div class="relative space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-1 h-6 rounded-full bg-teal-500"></div>
+          <div class="text-[10px] uppercase tracking-[0.2em] text-royal-muted">
+            Реферальная программа
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-royal-muted">Приглашённых</span>
+              <span class="text-sm font-medium text-white">{{ effectiveness_stats.invited_users }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-royal-muted">Сделали визит</span>
+              <span class="text-sm font-medium text-teal-400">{{ effectiveness_stats.invited_with_visit }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-royal-muted">Рефереров</span>
+              <span class="text-sm font-medium text-white">{{ effectiveness_stats.inviters_count }}</span>
+            </div>
+          </div>
+          <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-teal-500/5 border border-teal-500/30">
+            <div class="text-2xl font-bold text-teal-400">{{ "%.0f" | format(effectiveness_stats.referral_conversion) }}%</div>
+            <div class="text-[10px] text-teal-300/70 mt-1">конверсия в визит</div>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between pt-2 border-t border-royal-border/50">
+          <span class="text-xs text-royal-muted">Ср. приглашений на реферера</span>
+          <span class="text-sm font-bold text-white">{{ effectiveness_stats.avg_invites_per_referrer }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+  const labels = {{ flow_labels | tojson }};
+  const accrual = {{ flow_accrual | tojson }};
+  const writeoff = {{ flow_writeoff | tojson }};
+
+  const canvas = document.getElementById('bonusFlowChart');
+  const stub = document.getElementById('bonusFlowStub');
+  const prevBtn = document.getElementById('chartPrev');
+  const nextBtn = document.getElementById('chartNext');
+  const typeLabel = document.getElementById('chartTypeLabel');
+
+  if (!canvas || !labels || labels.length === 0) {
+    if (stub) stub.classList.remove('hidden');
+    return;
+  }
+
+  if (stub) stub.classList.add('hidden');
+
+  const ctx = canvas.getContext('2d');
+
+  // Градиенты
+  const goldGradient = ctx.createLinearGradient(0, 0, 0, 288);
+  goldGradient.addColorStop(0, 'rgba(212, 175, 55, 0.3)');
+  goldGradient.addColorStop(1, 'rgba(212, 175, 55, 0.02)');
+
+  const grayGradient = ctx.createLinearGradient(0, 0, 0, 288);
+  grayGradient.addColorStop(0, 'rgba(107, 114, 128, 0.3)');
+  grayGradient.addColorStop(1, 'rgba(107, 114, 128, 0.02)');
+
+  const chartTypes = [
+    { type: 'line', fill: false, label: 'Линии' },
+    { type: 'line', fill: true, label: 'Области' },
+    { type: 'bar', fill: false, label: 'Столбцы' }
+  ];
+  let currentTypeIndex = 0;
+
+  const baseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 500 },
+    interaction: { intersect: false, mode: 'index' },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        titleColor: '#D4AF37',
+        bodyColor: '#fff',
+        borderColor: '#D4AF37',
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: 12
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#6B7280', font: { size: 10 }, maxRotation: 0 },
+        grid: { display: false }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { color: '#6B7280', font: { size: 10 } },
+        grid: { color: 'rgba(38,38,38,0.5)' }
+      }
+    }
+  };
+
+  function buildDatasets(ct) {
+    const isBar = ct.type === 'bar';
+    return [
+      {
+        label: 'Начислено',
+        data: accrual,
+        tension: 0.4,
+        borderWidth: isBar ? 0 : 3,
+        borderColor: '#34D399', /* зелёный */
+        backgroundColor: ct.fill ? 'rgba(52, 211, 153, 0.15)' : (isBar ? 'rgba(52, 211, 153, 0.85)' : '#34D399'),
+        fill: ct.fill,
+        pointRadius: isBar ? 0 : 4,
+        pointBackgroundColor: '#34D399',
+        pointBorderColor: '#1a1a1a',
+        pointBorderWidth: 2,
+        borderRadius: isBar ? 6 : 0
+      },
+      {
+        label: 'Списано',
+        data: writeoff,
+        tension: 0.4,
+        borderWidth: isBar ? 0 : 3,
+        borderColor: '#F87171', /* красный */
+        backgroundColor: ct.fill ? 'rgba(248, 113, 113, 0.15)' : (isBar ? 'rgba(248, 113, 113, 0.85)' : '#F87171'),
+        fill: ct.fill,
+        pointRadius: isBar ? 0 : 4,
+        pointBackgroundColor: '#F87171',
+        pointBorderColor: '#1a1a1a',
+        pointBorderWidth: 2,
+        borderRadius: isBar ? 6 : 0
+      }
+    ];
+  }
+
+  let chart = new Chart(ctx, {
+    type: chartTypes[currentTypeIndex].type,
+    data: { labels: labels, datasets: buildDatasets(chartTypes[currentTypeIndex]) },
+    options: baseOptions
+  });
+
+  function updateChart(direction) {
+    currentTypeIndex = (currentTypeIndex + direction + chartTypes.length) % chartTypes.length;
+    const ct = chartTypes[currentTypeIndex];
+    typeLabel.textContent = ct.label;
+
+    chart.destroy();
+    chart = new Chart(ctx, {
+      type: ct.type,
+      data: { labels: labels, datasets: buildDatasets(ct) },
+      options: baseOptions
+    });
+  }
+
+  if (prevBtn) prevBtn.addEventListener('click', () => updateChart(-1));
+  if (nextBtn) nextBtn.addEventListener('click', () => updateChart(1));
+})();
+</script>
+
+<script>
+(function() {
+    // Проверяем параметр URL - если синхронизация уже была выполнена, не запускаем повторно
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('synced') === '1') {
+        return;
+    }
+    
+    // Проверяем, не идет ли уже синхронизация
+    if (window.syncInProgress) {
+        return;
+    }
+    
+    const overlay = document.getElementById('sync-overlay');
+    const content = document.getElementById('analytics-content-container');
+    const progressText = document.getElementById('sync-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const syncStats = document.getElementById('sync-stats');
+    
+    if (!overlay || !content || !progressText || !progressBar || !syncStats) {
+        return;
+    }
+    
+    // Помечаем, что синхронизация началась
+    window.syncInProgress = true;
+    
+    // Показываем overlay и затемняем контент
+    overlay.classList.remove('hidden');
+    content.style.opacity = '0.3';
+    content.style.pointerEvents = 'none';
+    
+    // Сбрасываем прогресс
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Начало синхронизации...';
+    syncStats.textContent = '0 / 0';
+    
+    // Запускаем синхронизацию
+    fetch('{{ url_for("sync_balances") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const synced = data.synced || 0;
+            const total = data.total || 1;
+            const percentage = Math.min(100, Math.round((synced / total) * 100));
+            
+            // Обновляем прогресс-бар
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = `Синхронизировано: ${synced} из ${total} пользователей`;
+            syncStats.textContent = `${synced} / ${total}`;
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                content.style.opacity = '1';
+                content.style.pointerEvents = 'auto';
+                window.syncInProgress = false;
+                
+                // Обновляем страницу для отображения актуальных данных
+                const url = new URL(window.location);
+                url.searchParams.set('synced', '1');
+                window.location.href = url.toString();
+            }, 1500);
+        } else {
+            window.syncInProgress = false;
+            progressText.textContent = 'Ошибка синхронизации';
+            progressBar.style.width = '0%';
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                content.style.opacity = '1';
+                content.style.pointerEvents = 'auto';
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка синхронизации:', error);
+        window.syncInProgress = false;
+        progressText.textContent = 'Ошибка подключения';
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            content.style.opacity = '1';
+            content.style.pointerEvents = 'auto';
+        }, 2000);
+    });
+})();
+</script>
+
+{% endblock %}

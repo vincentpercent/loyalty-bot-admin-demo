@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk bonus · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Заголовок -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+    
+    <div class="relative flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.22em] text-emerald-400">
+            Массовые операции
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+          Массовое начисление бонусов
+        </h1>
+        <p class="text-sm text-royal-muted mt-2 max-w-xl">
+          Начисление бонусов нескольким клиентам одновременно по выбранным критериям
+        </p>
+      </div>
+      <a href="{{ url_for('users_list') }}"
+         class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/50 hover:bg-royal-gold/20 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        К списку
+      </a>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="text-xs text-red-300 bg-red-900/30 border border-red-700/60 rounded-xl px-3 py-2">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  {% if message %}
+    <div class="text-xs text-emerald-300 bg-emerald-900/30 border border-emerald-700/60 rounded-xl px-3 py-2">
+      {{ message }}
+    </div>
+  {% endif %}
+
+  <form method="post"
+        class="space-y-5 bg-royal-surface rounded-2xl border border-royal-border px-6 py-5"
+        onsubmit="return confirm('Подтвердите массовое начисление бонусов выбранным пользователям. Вы уверены?');">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      <div class="space-y-1.5">
+        <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="amount">
+          Сумма начисления, ₽
+        </label>
+        <input
+          type="number"
+          min="1"
+          step="1"
+          id="amount"
+          name="amount"
+          required
+          class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold"
+          placeholder="Например, 300">
+      </div>
+
+      <div class="space-y-1.5 md:col-span-2">
+        <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="comment">
+          Комментарий (обязательно)
+        </label>
+        <textarea
+          id="comment"
+          name="comment"
+          rows="2"
+          required
+          class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold"
+          placeholder="Например: бонусы за участие в новогодней акции.">
+        </textarea>
+      </div>
+    </div>
+
+    <div class="space-y-3">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <input
+            type="text"
+            placeholder="Поиск по имени, username, телефону или TG ID…"
+            class="w-72 bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-royal-gold"
+            hx-get="{{ url_for('users_bulk_bonus_search') }}"
+            hx-trigger="keyup changed delay:400ms"
+            hx-target="#bulk-users-tbody"
+            hx-include="this"
+            name="q"
+          >
+        </div>
+        <div class="text-[11px] text-royal-muted">
+          Отметьте галочками тех, кому нужно начислить бонусы.
+        </div>
+      </div>
+
+      <div class="max-h-[60vh] overflow-auto border border-royal-border rounded-xl">
+        <table class="min-w-full text-sm">
+          <thead class="bg-black/40 text-xs uppercase tracking-[0.18em] text-royal-muted">
+            <tr class="border-b border-royal-border">
+              <th class="px-4 py-2">
+                <input type="checkbox"
+                       onclick="Array.from(document.querySelectorAll('.bulk-user-checkbox')).forEach(cb => cb.checked = this.checked);">
+              </th>
+              <th class="text-left px-4 py-2">ID</th>
+              <th class="text-left px-4 py-2">Клиент</th>
+              <th class="text-left px-4 py-2">Телефон</th>
+              <th class="text-left px-4 py-2">Баланс</th>
+              <th class="text-left px-4 py-2">Welcome</th>
+              <th class="text-left px-4 py-2">Канал</th>
+              <th class="text-left px-4 py-2">Создан</th>
+            </tr>
+          </thead>
+          <tbody id="bulk-users-tbody" class="divide-y divide-royal-border/60">
+            {% include "users_bulk_rows.html" %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between pt-2">
+      <div class="text-[11px] text-royal-muted">
+        Выберите одного или нескольких клиентов, затем нажмите «Начислить бонусы».
+      </div>
+      <button
+        type="submit"
+        class="px-5 py-2 rounded-xl bg-royal-gold text-black text-xs font-semibold uppercase tracking-[0.2em] hover:bg-royal-gold-soft transition">
+        Начислить бонусы выбранным
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}
+

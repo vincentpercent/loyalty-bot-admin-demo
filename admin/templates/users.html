@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+
+{% block title %}Users · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Заголовок -->
+    <div class="relative bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6" style="overflow: visible;">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32 pointer-events-none" style="clip-path: inset(0 0 0 0);"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-500/5 to-transparent rounded-full -ml-24 -mb-24 pointer-events-none" style="clip-path: inset(0 0 0 0);"></div>
+        
+        <div class="relative flex items-center justify-between z-10">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-indigo-400">
+                        Управление
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+                    Клиенты бота
+                </h1>
+                <p class="text-sm text-royal-muted mt-2 max-w-xl">
+                    Список всех пользователей Telegram-бота с возможностью управления бонусами
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="relative" x-data="{ open: false }" style="z-index: 1000;">
+                    <button @click="open = !open" @click.outside="open = false"
+                            class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-royal-gold text-royal-gold hover:bg-royal-gold hover:text-black uppercase tracking-[0.15em] text-xs transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        Массовые
+                        <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         x-cloak
+                         style="position: absolute; right: 0; top: 100%; margin-top: 0.5rem; z-index: 9999;"
+                         class="w-56 bg-royal-surface border border-royal-border rounded-xl shadow-2xl overflow-visible">
+                        <a href="{{ url_for('users_bulk_bonus_page') }}"
+                           class="flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-royal-gold/10 hover:text-royal-gold transition-colors">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Начисление бонусов</span>
+                        </a>
+                        <a href="{{ url_for('users_broadcast_page') }}"
+                           class="flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-royal-gold/10 hover:text-royal-gold transition-colors border-t border-royal-border/50">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                            </svg>
+                            <span>Рассылка сообщений</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-royal-surface rounded-2xl border border-royal-border overflow-hidden">
+        <form
+            id="users-filter-form"
+            class="border-b border-royal-border px-4 py-3 flex flex-wrap items-end gap-4 text-xs text-royal-muted"
+            method="get"
+            action="{{ url_for('users_list') }}"
+        >
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Поиск</label>
+                <input
+                    type="text"
+                    placeholder="Имя, username, телефон или TG ID…"
+                    class="w-72 bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-royal-gold"
+                    name="q"
+                    value="{{ q or '' }}"
+                >
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Регистрация c</label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="reg_from"
+                        value="{{ reg_from or '' }}"
+                        placeholder="дд.мм.гггг"
+                        data-date-input
+                        class="bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 pr-9 text-xs focus:outline-none focus:border-royal-gold text-white placeholder:text-royal-muted/50 w-full"
+                        readonly
+                    >
+                    <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-gold pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Регистрация по</label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="reg_to"
+                        value="{{ reg_to or '' }}"
+                        placeholder="дд.мм.гггг"
+                        data-date-input
+                        class="bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 pr-9 text-xs focus:outline-none focus:border-royal-gold text-white placeholder:text-royal-muted/50 w-full"
+                        readonly
+                    >
+                    <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-gold pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Бонусы от</label>
+                <input
+                    type="number"
+                    name="min_bonus"
+                    value="{{ '' if min_bonus is none else min_bonus }}"
+                    class="w-20 bg-black/40 border border-royal-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-royal-gold"
+                    min="0"
+                >
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Бонусы до</label>
+                <input
+                    type="number"
+                    name="max_bonus"
+                    value="{{ '' if max_bonus is none else max_bonus }}"
+                    class="w-20 bg-black/40 border border-royal-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-royal-gold"
+                    min="0"
+                >
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Записей от</label>
+                <input
+                    type="number"
+                    name="min_bookings"
+                    value="{{ '' if min_bookings is none else min_bookings }}"
+                    class="w-20 bg-black/40 border border-royal-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-royal-gold"
+                    min="0"
+                >
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Записей до</label>
+                <input
+                    type="number"
+                    name="max_bookings"
+                    value="{{ '' if max_bookings is none else max_bookings }}"
+                    class="w-20 bg-black/40 border border-royal-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-royal-gold"
+                    min="0"
+                >
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Рефералы</label>
+                <select
+                    name="ref_status"
+                    class="bg-black/40 border border-royal-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-royal-gold"
+                >
+                    <option value="" {% if not ref_status %}selected{% endif %}>Все</option>
+                    <option value="with" {% if ref_status == 'with' %}selected{% endif %}>Есть реф. бонусы</option>
+                    <option value="without" {% if ref_status == 'without' %}selected{% endif %}>Без реф. бонусов</option>
+                </select>
+            </div>
+
+            <div class="ml-auto flex flex-col gap-1">
+                <span class="h-[18px]"></span>
+                <button
+                    type="submit"
+                    class="px-3 py-1.5 rounded-lg border border-royal-border hover:border-royal-gold hover:text-royal-gold uppercase tracking-[0.18em] transition"
+                >
+                    Применить фильтры
+                </button>
+            </div>
+        </form>
+
+        <div class="max-h-[70vh] overflow-auto relative" id="users-table-container">
+            <!-- Overlay для синхронизации -->
+            <div id="sync-overlay" class="hidden absolute inset-0 bg-royal-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div class="text-center w-full max-w-md px-6">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-royal-gold border-t-transparent mb-4"></div>
+                    <p class="text-sm text-royal-gold font-medium mb-4">Синхронизация балансов...</p>
+                    
+                    <!-- Прогресс-бар -->
+                    <div class="relative w-full h-3 bg-royal-border/30 rounded-full overflow-hidden mb-2">
+                        <div id="progress-bar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-royal-gold via-amber-500 to-royal-gold rounded-full transition-all duration-300 ease-out" style="width: 0%">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Текст прогресса -->
+                    <p class="text-xs text-royal-muted" id="sync-progress">Подключение к YClients</p>
+                    <p class="text-xs text-royal-gold/70 mt-1" id="sync-stats">0 / 0</p>
+                </div>
+            </div>
+            
+            <table class="min-w-full text-sm" id="users-table">
+                <thead class="bg-black/40 text-xs uppercase tracking-[0.18em] text-royal-muted sticky top-0">
+                    <tr class="border-b border-royal-border">
+                        <th class="text-left px-4 py-2">ID</th>
+                        <th class="text-left px-4 py-2">Клиент</th>
+                        <th class="text-left px-4 py-2">Телефон</th>
+                        <th class="text-left px-4 py-2">Записи</th>
+                        <th class="text-left px-4 py-2">YCLIENTS</th>
+                        <th class="text-left px-4 py-2">Баланс</th>
+                        <th class="text-left px-4 py-2">Welcome</th>
+                        <th class="text-left px-4 py-2">Канал</th>
+                        <th class="text-left px-4 py-2">Рефералы</th>
+                        <th class="text-left px-4 py-2">Создан</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body" class="divide-y divide-royal-border/60">
+                {% for user, bonus, bookings_count in rows %}
+                    <tr class="hover:bg-white/5 cursor-pointer"
+                        onclick="window.location='{{ url_for('user_detail', user_id=user.id) }}'">
+                        <td class="px-4 py-2 text-xs text-royal-muted">
+                            {{ user.id }}
+                        </td>
+                        <td class="px-4 py-2">
+                            <div class="flex flex-col">
+                                <span class="text-sm">
+                                    {{ user.full_name or "—" }}
+                                </span>
+                                <span class="text-xs text-royal-muted">
+                                    {{ '@' ~ user.username if user.username else 'TG:' ~ user.telegram_id }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            {{ user.phone or '—' }}
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            {% if bookings_count > 0 %}
+                                <span class="text-royal-gold font-medium">{{ bookings_count }}</span>
+                            {% else %}
+                                <span class="text-royal-muted">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if user.yclients_client_id %}
+                                <span class="px-2 py-0.5 rounded-full border border-royal-gold text-royal-gold">
+                                    ID {{ user.yclients_client_id }}
+                                </span>
+                            {% else %}
+                                <span class="text-royal-muted">нет</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            {% if bonus %}
+                                <span class="text-royal-gold font-medium">{{ bonus.balance }}₽</span>
+                            {% else %}
+                                <span class="text-royal-muted">0₽</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if bonus and bonus.welcome_given %}
+                                <span class="text-royal-gold">да</span>
+                            {% else %}
+                                <span class="text-royal-muted">нет</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if bonus and bonus.channel_given %}
+                                <span class="text-royal-gold">да</span>
+                            {% else %}
+                                <span class="text-royal-muted">нет</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if bonus and bonus.referral_earned %}
+                                <span class="text-royal-gold">
+                                    +{{ bonus.referral_earned }}₽
+                                </span>
+                            {% else %}
+                                <span class="text-royal-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-xs text-royal-muted">
+                            {{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else '—' }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% if not rows %}
+                    <tr>
+                        <td colspan="10" class="px-4 py-6 text-center text-sm text-royal-muted">
+                            Пока ни одного пользователя.
+                        </td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    // Проверяем параметр URL - если синхронизация уже была выполнена, не запускаем повторно
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('synced') === '1') {
+        return;
+    }
+    
+    // Проверяем, не идет ли уже синхронизация (защита от повторных вызовов)
+    if (window.syncInProgress) {
+        return;
+    }
+    
+    const overlay = document.getElementById('sync-overlay');
+    const table = document.getElementById('users-table');
+    const progressText = document.getElementById('sync-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const syncStats = document.getElementById('sync-stats');
+    
+    if (!overlay || !table || !progressText || !progressBar || !syncStats) {
+        return;
+    }
+    
+    // Помечаем, что синхронизация началась
+    window.syncInProgress = true;
+    
+    // Показываем overlay и затемняем таблицу
+    overlay.classList.remove('hidden');
+    table.style.opacity = '0.3';
+    table.style.pointerEvents = 'none';
+    
+    // Сбрасываем прогресс
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Начало синхронизации...';
+    syncStats.textContent = '0 / 0';
+    
+    // Запускаем синхронизацию
+    fetch('{{ url_for("sync_balances") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const synced = data.synced || 0;
+            const total = data.total || 1;
+            const percentage = Math.min(100, Math.round((synced / total) * 100));
+            
+            // Обновляем прогресс-бар
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = `Синхронизировано: ${synced} из ${total} пользователей`;
+            syncStats.textContent = `${synced} / ${total}`;
+            
+            // Небольшая задержка перед скрытием overlay
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                table.style.opacity = '1';
+                table.style.pointerEvents = 'auto';
+                window.syncInProgress = false;
+                
+                // Обновляем страницу для отображения актуальных данных
+                // Используем параметр в URL, чтобы не запускать синхронизацию повторно
+                const url = new URL(window.location);
+                url.searchParams.set('synced', '1');
+                window.location.href = url.toString();
+            }, 1500);
+        } else {
+            window.syncInProgress = false;
+            progressText.textContent = 'Ошибка синхронизации';
+            progressBar.style.width = '0%';
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                table.style.opacity = '1';
+                table.style.pointerEvents = 'auto';
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка синхронизации:', error);
+        window.syncInProgress = false;
+        progressText.textContent = 'Ошибка подключения';
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            table.style.opacity = '1';
+            table.style.pointerEvents = 'auto';
+        }, 2000);
+    });
+})();
+</script>
+
+<script>
+// Инициализация красивых календарей
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInputs = document.querySelectorAll('[data-date-input]');
+    
+    dateInputs.forEach(input => {
+        // Преобразуем значение из формата YYYY-MM-DD в d.m.Y если нужно
+        let initialValue = input.value;
+        if (initialValue && initialValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const parts = initialValue.split('-');
+            initialValue = `${parts[2]}.${parts[1]}.${parts[0]}`;
+            input.value = initialValue;
+        }
+        
+        flatpickr(input, {
+            locale: 'ru',
+            dateFormat: 'd.m.Y',
+            allowInput: false,
+            clickOpens: true,
+            animate: true,
+            monthSelectorType: 'static',
+            static: true,
+            defaultDate: initialValue || null,
+        });
+    });
+});
+</script>
+
+{% endblock %}

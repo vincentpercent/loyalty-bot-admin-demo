@@ -1,0 +1,60 @@
+{% if rows %}
+  {% for user, bonus in rows %}
+    <tr class="hover:bg-white/5">
+      <td class="px-4 py-2 text-center">
+        <input
+          type="checkbox"
+          class="bulk-user-checkbox"
+          name="user_ids"
+          value="{{ user.id }}">
+      </td>
+      <td class="px-4 py-2 text-xs text-royal-muted whitespace-nowrap">
+        {{ user.id }}
+      </td>
+      <td class="px-4 py-2">
+        <div class="flex flex-col">
+          <span class="text-sm">
+            {{ user.full_name or "—" }}
+          </span>
+          <span class="text-xs text-royal-muted">
+            {{ '@' ~ user.username if user.username else 'TG:' ~ user.telegram_id }}
+          </span>
+        </div>
+      </td>
+      <td class="px-4 py-2 text-sm">
+        {{ user.phone or '—' }}
+      </td>
+      <td class="px-4 py-2 text-sm">
+        {% if bonus %}
+          <span class="text-royal-gold font-medium">{{ bonus.balance }}₽</span>
+        {% else %}
+          <span class="text-royal-muted">0₽</span>
+        {% endif %}
+      </td>
+      <td class="px-4 py-2 text-xs">
+        {% if bonus and bonus.welcome_given %}
+          <span class="text-royal-gold">да</span>
+        {% else %}
+          <span class="text-royal-muted">нет</span>
+        {% endif %}
+      </td>
+      <td class="px-4 py-2 text-xs">
+        {% if bonus and bonus.channel_given %}
+          <span class="text-royal-gold">да</span>
+        {% else %}
+          <span class="text-royal-muted">нет</span>
+        {% endif %}
+      </td>
+      <td class="px-4 py-2 text-xs text-royal-muted whitespace-nowrap">
+        {{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else '—' }}
+      </td>
+    </tr>
+  {% endfor %}
+{% else %}
+  <tr>
+    <td colspan="8" class="px-4 py-6 text-center text-sm text-royal-muted">
+      Под подходящий фильтр не попал ни один пользователь.
+    </td>
+  </tr>
+{% endif %}
+

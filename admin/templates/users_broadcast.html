@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Broadcast · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Заголовок -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-amber-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+    
+    <div class="relative flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/30 flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.22em] text-amber-400">
+            Массовые операции
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+          Рассылка уведомлений
+        </h1>
+        <p class="text-sm text-royal-muted mt-2 max-w-xl">
+          Отправка сообщений выбранным клиентам через Telegram-бота
+        </p>
+      </div>
+      <a href="{{ url_for('users_list') }}"
+         class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/50 hover:bg-royal-gold/20 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        К списку
+      </a>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="text-xs text-red-300 bg-red-900/30 border border-red-700/60 rounded-xl px-3 py-2">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  {% if message %}
+    <div class="text-xs text-emerald-300 bg-emerald-900/30 border border-emerald-700/60 rounded-xl px-3 py-2">
+      {{ message }}
+    </div>
+  {% endif %}
+
+  <form method="post"
+        class="space-y-5 bg-royal-surface rounded-2xl border border-royal-border px-6 py-5"
+        onsubmit="return confirm('Подтвердите отправку сообщения выбранным пользователям. Вы уверены?');">
+
+    <div class="space-y-1.5">
+      <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="message_text">
+        Текст сообщения
+      </label>
+      <textarea
+        id="message_text"
+        name="message_text"
+        rows="4"
+        required
+        class="w-full bg-black/60 border border-royal-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-royal-gold"
+        placeholder="Введите текст сообщения для рассылки...">{{ message_text or '' }}</textarea>
+    </div>
+
+    <div class="space-y-3">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <input
+            type="text"
+            placeholder="Поиск по имени, username, телефону или TG ID…"
+            class="w-72 bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-royal-gold"
+            hx-get="{{ url_for('users_broadcast_search') }}"
+            hx-trigger="keyup changed delay:400ms"
+            hx-target="#broadcast-users-tbody"
+            hx-include="this"
+            name="q"
+          >
+        </div>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-2 text-xs text-royal-muted cursor-pointer hover:text-royal-gold transition">
+            <input type="checkbox"
+                   id="select-all-checkbox"
+                   class="rounded border-royal-border"
+                   onclick="toggleAllCheckboxes(this.checked);">
+            <span>Выбрать всех</span>
+          </label>
+          <span class="text-[11px] text-royal-muted">
+            Отметьте галочками тех, кому нужно отправить сообщение.
+          </span>
+        </div>
+      </div>
+
+      <div class="max-h-[50vh] overflow-auto border border-royal-border rounded-xl">
+        <table class="min-w-full text-sm">
+          <thead class="bg-black/40 text-xs uppercase tracking-[0.18em] text-royal-muted sticky top-0">
+            <tr class="border-b border-royal-border">
+              <th class="px-4 py-2">
+                <input type="checkbox"
+                       onclick="toggleAllCheckboxes(this.checked); document.getElementById('select-all-checkbox').checked = this.checked;">
+              </th>
+              <th class="text-left px-4 py-2">ID</th>
+              <th class="text-left px-4 py-2">Клиент</th>
+              <th class="text-left px-4 py-2">Username</th>
+              <th class="text-left px-4 py-2">Telegram ID</th>
+              <th class="text-left px-4 py-2">Телефон</th>
+              <th class="text-left px-4 py-2">Создан</th>
+            </tr>
+          </thead>
+          <tbody id="broadcast-users-tbody" class="divide-y divide-royal-border/60">
+            {% include "users_broadcast_rows.html" %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between pt-2">
+      <div class="text-[11px] text-royal-muted">
+        Выберите одного или нескольких клиентов, затем нажмите «Отправить сообщение».
+      </div>
+      <button
+        type="submit"
+        class="px-5 py-2 rounded-xl bg-royal-gold text-black text-xs font-semibold uppercase tracking-[0.2em] hover:bg-royal-gold-soft transition">
+        Отправить сообщение
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+function toggleAllCheckboxes(checked) {
+  document.querySelectorAll('.broadcast-user-checkbox').forEach(cb => {
+    cb.checked = checked;
+  });
+}
+</script>
+{% endblock %}
+
+
+
+
+

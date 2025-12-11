@@ -1,0 +1,116 @@
+<tr id="review-row-{{ r.id }}" class="hover:bg-white/5 {% if r.user and r.user.id == top_reviewer_id %}bg-royal-gold/10 border-l-2 border-l-royal-gold{% endif %}">
+  <td class="px-4 py-2 text-xs text-royal-muted">
+    {{ r.id }}
+  </td>
+  <td class="px-4 py-2">
+    <div class="relative group">
+      <div class="w-16 h-16 border border-royal-border rounded-lg overflow-hidden bg-black/40 flex items-center justify-center cursor-pointer">
+        <img src="/reviews/{{ r.id }}/image"
+             alt="Скрин {{ r.id }}"
+             class="w-full h-full object-cover">
+      </div>
+      <!-- Popup при наведении -->
+      <div class="hidden group-hover:block absolute left-20 top-0 z-50 bg-royal-surface border border-royal-border rounded-xl shadow-2xl p-3 w-72">
+        <a href="/reviews/{{ r.id }}">
+          <img src="/reviews/{{ r.id }}/image"
+               alt="Скрин {{ r.id }}"
+               class="w-full h-auto rounded-lg border border-royal-border mb-3">
+        </a>
+        <div id="review-actions-{{ r.id }}">
+          {% if r.status.value == 'NEW' %}
+          <div class="flex gap-2">
+            <button type="button"
+                    hx-post="/reviews/{{ r.id }}/confirm/quick"
+                    hx-target="#review-row-{{ r.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Подтвердить отзыв и начислить бонус?"
+                    class="flex-1 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition">
+              ✓ Принять
+            </button>
+            <button type="button"
+                    hx-post="/reviews/{{ r.id }}/reject/quick"
+                    hx-target="#review-row-{{ r.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Отклонить отзыв?"
+                    class="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-medium transition">
+              ✕ Отклонить
+            </button>
+          </div>
+          {% else %}
+          <div class="text-center text-xs text-royal-muted">
+            {% if r.status.value == 'CONFIRMED' %}
+              <span class="text-emerald-400">✓ Подтверждено</span>
+            {% else %}
+              <span class="text-red-400">✕ Отклонено</span>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </td>
+  <td class="px-4 py-2 text-xs">
+    {% if r.platform == '2gis' %}
+      <span class="px-2 py-0.5 rounded-full bg-green-500/10 text-green-300 border border-green-500/40">
+        2ГИС
+      </span>
+    {% else %}
+      <span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/40">
+        Яндекс
+      </span>
+    {% endif %}
+  </td>
+  <td class="px-4 py-2">
+    <div class="flex flex-col">
+      <span class="text-sm flex items-center gap-1">
+        {% if r.user %}
+          {{ r.user.full_name or r.user.username or ('TG:' ~ r.telegram_user_id) }}
+          {% if r.user.id == top_reviewer_id %}
+            <span class="text-royal-gold" title="Лидер по отзывам">👑</span>
+          {% endif %}
+        {% else %}
+          {{ 'TG:' ~ r.telegram_user_id }}
+        {% endif %}
+      </span>
+      <span class="text-xs text-royal-muted">
+        TG ID: {{ r.telegram_user_id }}
+      </span>
+    </div>
+  </td>
+  <td class="px-4 py-2 text-sm">
+    {{ r.phone or '—' }}
+  </td>
+  <td class="px-4 py-2 text-xs text-royal-muted">
+    {{ r.created_at.strftime('%d.%m.%Y %H:%M') if r.created_at else '—' }}
+  </td>
+  <td class="px-4 py-2 text-xs">
+    {% if r.status.value == "NEW" %}
+      <span class="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/40">
+        Новая
+      </span>
+    {% elif r.status.value == "CONFIRMED" %}
+      <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/40">
+        Подтверждено
+      </span>
+    {% else %}
+      <span class="px-2 py-0.5 rounded-full bg-red-500/10 text-red-300 border border-red-500/40">
+        Отклонено
+      </span>
+    {% endif %}
+  </td>
+  <td class="px-4 py-2 text-right">
+    <a href="/reviews/{{ r.id }}"
+       class="text-xs px-2 py-1 rounded border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition uppercase tracking-[0.15em]">
+      Открыть
+    </a>
+  </td>
+</tr>
+
+
+
+
+
+
+
+
+

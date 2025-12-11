@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Тексты бота · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Заголовок -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-cyan-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+    
+    <div class="relative flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 flex items-center justify-center">
+            <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.22em] text-cyan-400">
+            Настройки
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+          Тексты бота
+        </h1>
+        <p class="text-sm text-royal-muted mt-2 max-w-xl">
+          Редактирование сообщений, которые бот отправляет пользователям. Поддерживается HTML-разметка
+        </p>
+      </div>
+      <a href="{{ url_for('settings_page') }}"
+         class="flex items-center gap-2 text-xs px-4 py-2 rounded-xl bg-royal-border/50 hover:bg-royal-gold/20 border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Настройки
+      </a>
+    </div>
+  </div>
+
+  {% if message %}
+    <div class="bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 px-4 py-3 rounded-xl text-sm">
+      {{ message }}
+    </div>
+  {% endif %}
+
+  <form method="post" class="space-y-6">
+    {% for text in texts %}
+      <div class="bg-royal-surface rounded-2xl border border-royal-border px-6 py-5 space-y-3">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="text-sm font-medium text-white">
+              {{ text.key }}
+            </div>
+            {% if text.description %}
+              <div class="text-xs text-royal-muted mt-1">
+                {{ text.description }}
+              </div>
+            {% endif %}
+          </div>
+          <div class="text-[10px] text-royal-muted">
+            {% if text.updated_at %}
+              Обновлено: {{ text.updated_at.strftime('%d.%m.%Y %H:%M') }}
+            {% endif %}
+          </div>
+        </div>
+        
+        <textarea
+          name="text_{{ text.key }}"
+          rows="4"
+          class="w-full bg-black/60 border border-royal-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-royal-gold font-mono"
+          placeholder="Введите текст..."
+        >{{ text.value }}</textarea>
+        
+        <div class="text-[10px] text-royal-muted">
+          Переменные: 
+          {% if 'amount' in text.key or 'bonus' in text.key %}
+            <code class="bg-black/40 px-1 rounded">{amount}</code>
+            <code class="bg-black/40 px-1 rounded">{balance}</code>
+          {% endif %}
+          {% if 'referral' in text.key %}
+            <code class="bg-black/40 px-1 rounded">{referral_amount}</code>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div class="bg-royal-surface rounded-2xl border border-royal-border px-6 py-10 text-center text-sm text-royal-muted">
+        Тексты не найдены. Они будут созданы автоматически при первом использовании бота.
+      </div>
+    {% endfor %}
+
+    {% if texts %}
+      <div class="flex justify-end">
+        <button type="submit"
+                class="px-6 py-2.5 rounded-xl bg-royal-gold text-black text-sm font-semibold uppercase tracking-[0.18em] hover:bg-royal-gold-soft transition">
+          Сохранить все тексты
+        </button>
+      </div>
+    {% endif %}
+  </form>
+
+</div>
+{% endblock %}
+
+
+
+
+

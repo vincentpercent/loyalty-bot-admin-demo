@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Bookings · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Заголовок -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+        
+        <div class="relative">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="text-[10px] uppercase tracking-[0.22em] text-blue-400">
+                    Управление
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+                Записи YClients
+            </h1>
+            <p class="text-sm text-royal-muted mt-2 max-w-xl">
+                Просмотр и управление записями клиентов через YClients API
+            </p>
+        </div>
+    </div>
+
+    {% if error or request.query_params.get('error') %}
+        <div class="text-xs text-red-300 bg-red-900/30 border border-red-700/60 rounded-xl px-3 py-2">
+            {% if request.query_params.get('error') == 'cancel_failed' %}
+                Не удалось отменить запись. Попробуйте ещё раз или проверьте YCLIENTS.
+            {% else %}
+                {{ error }}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if message or request.query_params.get('message') %}
+        <div class="text-xs text-emerald-300 bg-emerald-900/30 border border-emerald-700/60 rounded-xl px-3 py-2">
+            {% if request.query_params.get('message') == 'cancelled' %}
+                Запись успешно отменена.
+            {% else %}
+                {{ message }}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="bg-royal-surface rounded-2xl border border-royal-border">
+        <form
+            id="bookings-filter-form"
+            class="border-b border-royal-border px-4 py-3 flex flex-wrap items-end gap-4 text-xs text-royal-muted"
+            method="get"
+            action="{{ url_for('bookings_list') }}"
+        >
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Дата с</label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="start_date"
+                        value="{{ start_date or '' }}"
+                        placeholder="дд.мм.гггг"
+                        data-date-input
+                        class="bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 pr-9 text-xs focus:outline-none focus:border-royal-gold text-white placeholder:text-royal-muted/50 w-full"
+                        readonly
+                    >
+                    <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-gold pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Дата по</label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="end_date"
+                        value="{{ end_date or '' }}"
+                        placeholder="дд.мм.гггг"
+                        data-date-input
+                        class="bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 pr-9 text-xs focus:outline-none focus:border-royal-gold text-white placeholder:text-royal-muted/50 w-full"
+                        readonly
+                    >
+                    <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-gold pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="uppercase tracking-[0.18em] text-[10px]">Поиск</label>
+                <input
+                    type="text"
+                    placeholder="Имя клиента, телефон..."
+                    class="w-64 bg-black/40 border border-royal-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-royal-gold"
+                    name="q"
+                    value="{{ q or '' }}"
+                >
+            </div>
+
+            <div class="ml-auto flex flex-col gap-1">
+                <span class="h-[18px]"></span>
+                <button
+                    type="submit"
+                    class="px-3 py-1.5 rounded-lg border border-royal-border hover:border-royal-gold hover:text-royal-gold uppercase tracking-[0.18em] transition"
+                >
+                    Применить фильтры
+                </button>
+            </div>
+        </form>
+
+        <div class="max-h-[70vh] overflow-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-black/40 text-xs uppercase tracking-[0.18em] text-royal-muted sticky top-0">
+                    <tr class="border-b border-royal-border">
+                        <th class="text-left px-4 py-2">ID записи</th>
+                        <th class="text-left px-4 py-2">Дата и время</th>
+                        <th class="text-left px-4 py-2">Клиент</th>
+                        <th class="text-left px-4 py-2">Телефон</th>
+                        <th class="text-left px-4 py-2">Услуги</th>
+                        <th class="text-left px-4 py-2">Мастер</th>
+                        <th class="text-left px-4 py-2">Статус</th>
+                        <th class="text-left px-4 py-2">Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-royal-border/60">
+                {% for record in records %}
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-2 text-xs text-royal-muted">
+                            {{ record.id }}
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            {% if record.datetime %}
+                                {{ record.datetime[:16].replace('T', ' ') }}
+                            {% elif record.date %}
+                                {{ record.date }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2">
+                            <div class="flex flex-col">
+                                {% set client = record.client or {} %}
+                                <span class="text-sm">
+                                    {{ client.name or client.get('full_name') or '—' }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            {% set client = record.client or {} %}
+                            {{ client.phone or '—' }}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% if record.services %}
+                                {% for service in record.services[:2] %}
+                                    <div>{{ service.title or service.get('name') or '?' }}</div>
+                                {% endfor %}
+                                {% if record.services | length > 2 %}
+                                    <div class="text-royal-muted">+{{ record.services | length - 2 }} ещё</div>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-royal-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            {% set staff = record.staff or {} %}
+                            {{ staff.name or '—' }}
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            {% set attendance = record.attendance or record.visit_attendance or 0 %}
+                            {% if attendance == 1 or record.get('visit_attendance') == 1 %}
+                                <span class="text-emerald-400">Пришёл</span>
+                            {% elif attendance == 2 or record.get('attendance') == 2 %}
+                                <span class="text-red-400">Не пришёл</span>
+                            {% elif attendance == -1 %}
+                                <span class="text-royal-muted">Отменено</span>
+                            {% else %}
+                                <span class="text-royal-gold">Ожидается</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2">
+                            {% set attendance = record.attendance or record.visit_attendance or 0 %}
+                            {% if attendance != -1 and attendance != 1 and attendance != 2 %}
+                                <form method="post" action="{{ url_for('booking_cancel', record_id=record.id) }}" 
+                                      onsubmit="return confirm('Отменить запись #{{ record.id }}?');"
+                                      class="inline">
+                                    <button type="submit"
+                                            class="px-2 py-1 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-500/20 text-xs transition">
+                                        Отменить
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-royal-muted text-xs">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% if not records %}
+                    <tr>
+                        <td colspan="8" class="px-4 py-6 text-center text-sm text-royal-muted">
+                            Нет записей за выбранный период.
+                        </td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Инициализация красивых календарей
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInputs = document.querySelectorAll('[data-date-input]');
+    
+    dateInputs.forEach(input => {
+        // Преобразуем значение из формата YYYY-MM-DD в d.m.Y если нужно
+        let initialValue = input.value;
+        if (initialValue && initialValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const parts = initialValue.split('-');
+            initialValue = `${parts[2]}.${parts[1]}.${parts[0]}`;
+            input.value = initialValue;
+        }
+        
+        flatpickr(input, {
+            locale: 'ru',
+            dateFormat: 'd.m.Y',
+            allowInput: false,
+            clickOpens: true,
+            animate: true,
+            monthSelectorType: 'static',
+            static: true,
+            defaultDate: initialValue || null,
+        });
+    });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,56 @@
+{% for user, bonus in rows %}
+  <tr class="hover:bg-white/5">
+    <td class="px-4 py-2 text-center">
+      {% if user.telegram_id %}
+        <input type="checkbox"
+               name="user_ids"
+               value="{{ user.id }}"
+               class="broadcast-user-checkbox rounded border-royal-border">
+      {% else %}
+        <span class="text-royal-muted text-[10px]" title="Нет Telegram ID">—</span>
+      {% endif %}
+    </td>
+    <td class="px-4 py-2 text-xs text-royal-muted">
+      {{ user.id }}
+    </td>
+    <td class="px-4 py-2">
+      <span class="text-sm">{{ user.full_name or '—' }}</span>
+    </td>
+    <td class="px-4 py-2 text-xs">
+      {% if user.username %}
+        <span class="text-royal-gold">@{{ user.username }}</span>
+      {% else %}
+        <span class="text-royal-muted">—</span>
+      {% endif %}
+    </td>
+    <td class="px-4 py-2 text-xs text-royal-muted">
+      {{ user.telegram_id or '—' }}
+    </td>
+    <td class="px-4 py-2 text-sm">
+      {{ user.phone or '—' }}
+    </td>
+    <td class="px-4 py-2 text-xs text-royal-muted">
+      {{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else '—' }}
+    </td>
+  </tr>
+{% endfor %}
+{% if not rows %}
+  <tr>
+    <td colspan="7" class="px-4 py-6 text-center text-sm text-royal-muted">
+      Пока ни одного пользователя.
+    </td>
+  </tr>
+{% endif %}
+
+
+
+
+
+
+
+
+
+
+
+
+

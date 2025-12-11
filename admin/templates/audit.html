@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал действий · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Заголовок -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-royal-surface via-royal-surface to-royal-gold/5 rounded-2xl border border-royal-border p-6">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-royal-gold/10 to-transparent rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full -ml-24 -mb-24"></div>
+    
+    <div class="relative">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-royal-gold/20 to-royal-gold/5 border border-royal-gold/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-royal-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+          </svg>
+        </div>
+        <div class="text-[10px] uppercase tracking-[0.22em] text-royal-gold">
+          Журнал действий
+        </div>
+      </div>
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-royal-muted bg-clip-text text-transparent">
+        Аудит действий администратора
+      </h1>
+      <p class="text-sm text-royal-muted mt-2 max-w-xl">
+        История всех изменений бонусов, отзывов, настроек и других операций
+      </p>
+    </div>
+  </div>
+
+  <!-- Фильтры -->
+  <form method="get"
+        class="bg-royal-surface rounded-2xl border border-royal-border px-6 py-5 space-y-4">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="w-1 h-6 rounded-full bg-royal-gold"></div>
+      <div class="text-[10px] uppercase tracking-[0.22em] text-royal-muted">
+        Фильтры
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <div class="space-y-1.5">
+        <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="action">
+          Тип действия
+        </label>
+        <select id="action"
+                name="action"
+                class="w-full bg-royal-border/30 border border-royal-border rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-royal-gold transition">
+          <option value="">Все действия</option>
+          {% for value, label in actions_with_labels %}
+            <option value="{{ value }}" {% if current_action == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="admin">
+          Администратор
+        </label>
+        <input
+          type="text"
+          id="admin"
+          name="admin"
+          value="{{ admin_filter or '' }}"
+          placeholder="Логин администратора…"
+          class="w-full bg-royal-border/30 border border-royal-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-royal-muted/50 focus:outline-none focus:border-royal-gold transition">
+      </div>
+
+      <div class="space-y-1.5 md:col-span-2">
+        <label class="text-xs text-royal-muted uppercase tracking-[0.18em]" for="q">
+          Поиск по описанию
+        </label>
+        <input
+          type="text"
+          id="q"
+          name="q"
+          value="{{ q or '' }}"
+          placeholder="Например: имя клиента, комментарий, отзыв…"
+          class="w-full bg-royal-border/30 border border-royal-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-royal-muted/50 focus:outline-none focus:border-royal-gold transition">
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between pt-2 border-t border-royal-border/50">
+      <span class="text-[11px] text-royal-muted">Показываются последние 300 событий с учётом фильтров</span>
+      <button
+        type="submit"
+        class="px-5 py-2 rounded-xl bg-gradient-to-r from-royal-gold to-amber-500 text-black text-xs font-semibold uppercase tracking-[0.18em] hover:shadow-lg hover:shadow-royal-gold/20 transition">
+        Применить
+      </button>
+    </div>
+  </form>
+
+  <!-- Таблица событий -->
+  <div class="bg-royal-surface rounded-2xl border border-royal-border overflow-hidden">
+    <div class="border-b border-royal-border px-6 py-4 flex items-center justify-between gap-4 bg-black/20">
+      <div class="flex items-center gap-3">
+        <div class="w-1 h-6 rounded-full bg-royal-gold"></div>
+        <div class="text-[10px] uppercase tracking-[0.18em] text-royal-muted">
+          События аудита
+        </div>
+      </div>
+      <div class="text-xs text-royal-gold font-medium">
+        Всего: <span class="text-white">{{ logs|length }}</span>
+      </div>
+    </div>
+
+    <div class="max-h-[70vh] overflow-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-royal-border/30 text-xs uppercase tracking-[0.18em] text-royal-muted sticky top-0">
+          <tr class="border-b border-royal-border">
+            <th class="text-left px-6 py-3 font-normal">Время</th>
+            <th class="text-left px-6 py-3 font-normal">Администратор</th>
+            <th class="text-left px-6 py-3 font-normal">Действие</th>
+            <th class="text-left px-6 py-3 font-normal">Объект</th>
+            <th class="text-left px-6 py-3 font-normal">Детали</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-royal-border/40">
+        {% for log in logs %}
+          <tr class="align-top hover:bg-royal-gold/5 transition-colors group">
+            <td class="px-6 py-3 text-xs text-royal-muted whitespace-nowrap">
+              {{ log.created_at.strftime('%d.%m.%Y · %H:%M') if log.created_at else '—' }}
+            </td>
+            <td class="px-6 py-3 text-xs text-royal-muted whitespace-nowrap">
+              <span class="font-medium text-white/80">{{ log.admin_username or '—' }}</span>
+            </td>
+            <td class="px-6 py-3 whitespace-nowrap">
+              <span class="px-3 py-1 rounded-lg border border-royal-border/50 bg-royal-border/20 text-xs text-royal-gold group-hover:border-royal-gold/50 transition">
+                {{ log.human_action }}
+              </span>
+            </td>
+            <td class="px-6 py-3 text-xs text-royal-muted whitespace-nowrap">
+              {{ log.human_entity }}
+            </td>
+            <td class="px-6 py-3 text-xs text-royal-muted max-w-md">
+              <div class="leading-relaxed">{{ log.human_details }}</div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center">
+              <svg class="w-12 h-12 mx-auto text-royal-muted/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+              </svg>
+              <p class="text-sm text-royal-muted">Записей аудита пока нет</p>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

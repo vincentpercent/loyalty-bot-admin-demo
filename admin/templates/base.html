@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Loyalty Demo Admin{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'royal-black': '#050505',
+                'royal-surface': '#111111',
+                'royal-surface-soft': '#141414',
+                'royal-border': '#262626',
+                'royal-gold': '#D4AF37',
+                'royal-gold-soft': '#9d8230',
+                'royal-muted': '#A3A3A3',
+              },
+              fontFamily: {
+                'ui': ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Inter', 'sans-serif'],
+              }
+            }
+          }
+        }
+    </script>
+
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Flatpickr для красивых календарей -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+        
+        .animate-shimmer {
+            animation: shimmer 2s infinite;
+        }
+        
+        /* Стили для Flatpickr в темной теме */
+        .flatpickr-calendar {
+            background: #111111 !important;
+            border: 1px solid #262626 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, sans-serif !important;
+        }
+        
+        .flatpickr-months {
+            background: #111111 !important;
+            border-bottom: 1px solid #262626 !important;
+            padding: 12px 8px !important;
+        }
+        
+        .flatpickr-month {
+            color: #fff !important;
+        }
+        
+        .flatpickr-current-month {
+            color: #D4AF37 !important;
+            font-weight: 600 !important;
+        }
+        
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            color: #D4AF37 !important;
+            fill: #D4AF37 !important;
+        }
+        
+        .flatpickr-prev-month:hover,
+        .flatpickr-next-month:hover {
+            color: #9d8230 !important;
+            fill: #9d8230 !important;
+        }
+        
+        .flatpickr-weekdays {
+            background: #111111 !important;
+            border-bottom: 1px solid #262626 !important;
+        }
+        
+        .flatpickr-weekday {
+            color: #A3A3A3 !important;
+            font-weight: 500 !important;
+            font-size: 11px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+        }
+        
+        .flatpickr-days {
+            background: #111111 !important;
+        }
+        
+        .flatpickr-day {
+            color: #fff !important;
+            border: none !important;
+            border-radius: 8px !important;
+        }
+        
+        .flatpickr-day:hover {
+            background: #262626 !important;
+            border-color: #262626 !important;
+        }
+        
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: #D4AF37 !important;
+            border-color: #D4AF37 !important;
+            color: #000 !important;
+            font-weight: 600 !important;
+        }
+        
+        .flatpickr-day.selected:hover,
+        .flatpickr-day.startRange:hover,
+        .flatpickr-day.endRange:hover {
+            background: #9d8230 !important;
+            border-color: #9d8230 !important;
+        }
+        
+        .flatpickr-day.today {
+            border-color: #D4AF37 !important;
+            color: #D4AF37 !important;
+        }
+        
+        .flatpickr-day.today:hover {
+            background: #D4AF37 !important;
+            color: #000 !important;
+        }
+        
+        .flatpickr-day.flatpickr-disabled,
+        .flatpickr-day.prevMonthDay,
+        .flatpickr-day.nextMonthDay {
+            color: #404040 !important;
+        }
+        
+        .flatpickr-time {
+            border-top: 1px solid #262626 !important;
+            background: #111111 !important;
+        }
+        
+        .flatpickr-time input {
+            color: #fff !important;
+            background: transparent !important;
+        }
+        
+        .flatpickr-time input:hover {
+            background: #262626 !important;
+        }
+        
+        .flatpickr-am-pm {
+            color: #D4AF37 !important;
+        }
+        
+        .flatpickr-am-pm:hover {
+            background: #262626 !important;
+        }
+    </style>
+</head>
+<body class="bg-royal-black text-white font-ui min-h-screen">
+<div class="flex min-h-screen">
+
+    <aside class="w-20 border-r border-royal-border flex flex-col items-center py-6 gap-8">
+        <a href="{{ url_for('dashboard') }}" class="block">
+            <div class="w-11 h-11 rounded-full border border-royal-gold flex items-center justify-center overflow-hidden bg-black">
+                <img src="{{ url_for('static', path='logo.png') }}"
+                     alt="Loyalty Demo"
+                     class="w-full h-full object-contain">
+            </div>
+        </a>
+
+        <nav class="flex flex-col items-center gap-5 text-[10px] uppercase tracking-[0.18em] text-royal-muted">
+
+            <a href="{{ url_for('dashboard') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path == '/' %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path == '/' %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                    </svg>
+                </span>
+                <span>Главная</span>
+            </a>
+
+            <a href="{{ url_for('users_list') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/users') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/users') %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </span>
+                <span>Клиенты</span>
+            </a>
+
+            <a href="{{ url_for('reviews_list') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/reviews') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/reviews') %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                    </svg>
+                </span>
+                <span>Отзывы</span>
+            </a>
+
+            <a href="{{ url_for('bookings_list') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/bookings') and not request.url.path.startswith('/bookings/analytics') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/bookings') and not request.url.path.startswith('/bookings/analytics') %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </span>
+                <span>Записи</span>
+            </a>
+
+            <a href="{{ url_for('analytics') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/analytics') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/analytics') %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </span>
+                <span>Статист.</span>
+            </a>
+
+            <a href="{{ url_for('audit_log') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/audit') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/audit') %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                </span>
+                <span>Журнал</span>
+            </a>
+
+            <a href="{{ url_for('bot_texts_page') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/texts') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/texts') %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                </span>
+                <span>Тексты</span>
+            </a>
+
+            <a href="{{ url_for('promocodes_list') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/promocodes') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/promocodes') %}border-royal-gold bg-royal-gold/10{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                </span>
+                <span>Промо</span>
+            </a>
+
+            <a href="{{ url_for('settings_page') }}"
+               class="group flex flex-col items-center gap-1.5 {% if request.url.path.startswith('/settings') %}text-royal-gold{% endif %} transition-colors">
+                <span class="w-9 h-9 rounded-xl border {% if request.url.path.startswith('/settings') %}border-royal-gold{% else %}border-royal-border{% endif %} group-hover:border-royal-gold group-hover:bg-royal-gold/5 flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </span>
+                <span>Настройки</span>
+            </a>
+
+        </nav>
+
+        <div class="mt-auto text-[9px] text-royal-muted tracking-[0.18em] uppercase rotate-180 [writing-mode:vertical-rl]">
+            Loyalty Demo Bot
+        </div>
+    </aside>
+
+    <main class="flex-1 px-10 py-8">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-semibold tracking-[0.18em] uppercase">
+                    Loyalty Demo Bot
+                </h1>
+                <p class="text-sm text-royal-muted mt-1">
+                    Консоль администратора
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right text-[11px] text-royal-muted space-y-0.5">
+                    <div class="uppercase tracking-[0.22em] text-royal-gold">Premium</div>
+                    <div>Версия 1.0 · internal</div>
+                </div>
+                <a href="/logout"
+                   class="text-[11px] px-3 py-1.5 rounded-lg border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold uppercase tracking-[0.18em] transition">
+                    Logout
+                </a>
+            </div>
+        </header>
+
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+</body>
+</html>
+

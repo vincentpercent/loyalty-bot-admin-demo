@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Аналитика бонусов · Loyalty Demo Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="text-[10px] uppercase tracking-[0.22em] text-royal-muted mb-1">
+        Аналитика · бонусная экономика
+      </div>
+      <h1 class="text-xl font-semibold">
+        Бонусы и обязательства
+      </h1>
+      <p class="mt-1 text-xs text-royal-muted">
+        Период для помесячной/подневной таблицы: последние {{ period_days }} дней.
+      </p>
+    </div>
+    <div class="flex items-center gap-2 text-xs">
+      <a href="{{ url_for('dashboard') }}"
+         class="px-3 py-1.5 rounded-lg border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition">
+        ← Дашборд
+      </a>
+      <a href="{{ url_for('users_list') }}"
+         class="px-3 py-1.5 rounded-lg border border-royal-border hover:border-royal-gold text-royal-muted hover:text-royal-gold transition">
+        Пользователи
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI-плашки -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-royal-surface rounded-2xl border border-royal-border px-4 py-3">
+      <div class="text-[10px] uppercase tracking-[0.18em] text-royal-muted mb-1">
+        Всего пользователей
+      </div>
+      <div class="text-2xl font-semibold">
+        {{ total_users }}
+      </div>
+      <div class="text-[11px] text-royal-muted mt-1">
+        Кол-во клиентов в базе бота.
+      </div>
+    </div>
+
+    <div class="bg-royal-surface rounded-2xl border border-royal-border px-4 py-3">
+      <div class="text-[10px] uppercase tracking-[0.18em] text-royal-muted mb-1">
+        Активные за 30 дней
+      </div>
+      <div class="text-2xl font-semibold">
+        {{ active_users_30d }}
+      </div>
+      <div class="text-[11px] text-royal-muted mt-1">
+        Пользователи, у которых были бонусные операции за последние 30 дней.
+      </div>
+    </div>
+
+    <div class="bg-royal-surface rounded-2xl border border-royal-border px-4 py-3">
+      <div class="text-[10px] uppercase tracking-[0.18em] text-royal-muted mb-1">
+        Начислено / списано
+      </div>
+      <div class="text-lg font-semibold">
+        {{ total_accrual|int }}₽ / {{ total_writeoff|int }}₽
+      </div>
+      <div class="text-[11px] text-royal-muted mt-1">
+        Доля списаний: {{ writeoff_share_percent }}%
+      </div>
+    </div>
+
+    <div class="bg-royal-surface rounded-2xl border border-royal-border px-4 py-3">
+      <div class="text-[10px] uppercase tracking-[0.18em] text-royal-muted mb-1">
+        Обязательство по бонусам
+      </div>
+      <div class="text-2xl font-semibold text-royal-gold">
+        {{ obligation|int }}₽
+      </div>
+      <div class="text-[11px] text-royal-muted mt-1">
+        Суммарный текущий баланс бонусов у всех клиентов.
+      </div>
+    </div>
+  </div>
+
+  <!-- Таблица по дням -->
+  <div class="bg-royal-surface rounded-2xl border border-royal-border overflow-hidden">
+    <div class="border-b border-royal-border px-4 py-3 flex items-center justify-between gap-4">
+      <div class="text-[10px] uppercase tracking-[0.18em] text-royal-muted">
+        Динамика начислений и списаний по дням
+      </div>
+      <div class="text-xs text-royal-muted">
+        Условный остаток считается по окну {{ period_days }} дней (не вся история).
+      </div>
+    </div>
+
+    <div class="max-h-[70vh] overflow-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-black/40 text-xs uppercase tracking-[0.18em] text-royal-muted">
+          <tr class="border-b border-royal-border">
+            <th class="text-left px-4 py-2">Дата</th>
+            <th class="text-left px-4 py-2">Начислено, ₽</th>
+            <th class="text-left px-4 py-2">Списано, ₽</th>
+            <th class="text-left px-4 py-2">Условный остаток, ₽</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-royal-border/60">
+        {% for row in daily_rows %}
+          <tr>
+            <td class="px-4 py-2 text-xs text-royal-muted whitespace-nowrap">
+              {{ row.date_label }}
+            </td>
+            <td class="px-4 py-2 text-sm text-royal-gold">
+              {{ row.accrual|int }}
+            </td>
+            <td class="px-4 py-2 text-sm text-red-200">
+              {{ row.writeoff|int }}
+            </td>
+            <td class="px-4 py-2 text-sm">
+              {{ row.balance|int }}₽
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="4" class="px-4 py-6 text-center text-sm text-royal-muted">
+              За выбранный период нет ни одной бонусной операции.
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
